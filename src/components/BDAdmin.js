@@ -18,9 +18,21 @@ class BDAdmin extends Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.fileInputOne = React.createRef();
         this.fileInputTwo = React.createRef();
-      }
 
-      handleSubmit(event) {
+      }
+     
+      eliminarbd (bd) {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            bd.remove()
+            resolve(true);
+          }, 15000);
+        });
+      }
+   
+
+      async handleSubmit (event)  {
+
         event.preventDefault();
         var clientesRef = db.ref("Cliente");
         var productoRef = db.ref("Producto");
@@ -30,17 +42,25 @@ class BDAdmin extends Component {
             var file = this.fileInputOne.current.files[0];     
             var clientesReader = new FileReader();
             clientesReader.readAsBinaryString(file);
-            clientesReader.onload = function(e) {
+            clientesReader.onload = async function(e) {
               let data = e.target.result;
               let workbook = XLSX.read(data, {type:"binary"});
-              workbook.SheetNames.forEach(sheet => {
+              workbook.SheetNames.forEach(async sheet => {
                         let rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheet]);
                         var json = JSON.parse( JSON.stringify(rowObject))
                         try {
-                          productoRef.remove();
-                          productoRef.set(json);
-                          alert("Base de datos de CLIENTES actualizada correctamente.")
-                          this.fileInputOne = null;
+                          alert("Eliminando base de datos anterior de prodcutos. Espere 15 segundos.");
+                          let productosRemover = await new Promise(resolve => {
+                            setTimeout(() => {
+                              productoRef.remove()
+                              resolve(true);
+                            }, 15000);
+                          });
+                          if(productosRemover){
+                            productoRef.set(json);
+                            alert("Base de datos de PRODUCTOS actualizada correctamente.")
+                            this.fileInputOne = null;
+                          }
                         } catch (error) {
                               alert("No se ha podido actualizar la base de datos. ERROR: " + error)
                               console.error(error);
@@ -56,17 +76,25 @@ class BDAdmin extends Component {
             var file = this.fileInputTwo.current.files[0];     
             var clientesReader = new FileReader();
             clientesReader.readAsBinaryString(file);
-            clientesReader.onload = function(e) {
+            clientesReader.onload = async function(e) {
               let data = e.target.result;
               let workbook = XLSX.read(data, {type:"binary"});
-              workbook.SheetNames.forEach(sheet => {
+              workbook.SheetNames.forEach(async sheet => {
                         let rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheet]);
                         var json = JSON.parse( JSON.stringify(rowObject))
                         try {
-                            clientesRef.remove();
-                            clientesRef.set(json);
-                          alert("Base de datos de PRODUCTOS actualizada correctamente.")
-                          this.fileInputTwo = null;
+                            alert("Eliminando base de datos anterior de clientes. Espere 15 segundos.");
+                            let clientsRemove = await new Promise(resolve => {
+                              setTimeout(() => {
+                                clientesRef.remove()
+                                resolve(true);
+                              }, 15000);
+                            });
+                            if(clientsRemove){
+                              clientesRef.set(json);
+                              alert("Base de datos de CLIENTES actualizada correctamente.")
+                              this.fileInputTwo = null;
+                            }
                         } catch (error) {
                               alert("No se ha podido actualizar la base de datos. ERROR: " + error)
                               console.error(error);
@@ -77,11 +105,9 @@ class BDAdmin extends Component {
 
           }
 
-      }
+    }
 
-
-    
-    render(){
+    render () {
         
         const user = UserContext;
 
@@ -112,7 +138,7 @@ class BDAdmin extends Component {
                     <br/>
 
                     <label htmlFor="userPassword" className="block">
-                        Usuarios:
+                        Clientes:
                     </label>
                     <input
                         type="file"

@@ -15,8 +15,10 @@
     "react": "^16.13.1",
     "react-alert": "^7.0.2",
     "react-dom": "^16.13.1",
+    "react-export-excel": "^0.5.3",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
+    "react-toastify": "^7.0.3",
     "uuid": "^8.1.0",
     "xlsx": "^0.16.9"
   },

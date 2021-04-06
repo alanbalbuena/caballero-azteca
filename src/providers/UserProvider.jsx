@@ -14,8 +14,6 @@ class UserProvider extends Component {
       const user = await generateUserDocument(userAuth);
       this.setState({ user });
     });
-
-
   };
 
   render() {
