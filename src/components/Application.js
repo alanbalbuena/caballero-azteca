@@ -10,6 +10,7 @@ import { Suspense } from "react";
 import ListaFolios from "./ListaFolios";
 import BDAdmin from "./BDAdmin";
 import { Route, Switch } from "react-router-dom";
+
 function Application() {
 
   const user = useContext(UserContext);
@@ -20,7 +21,7 @@ function Application() {
         user ?
         
         <Router>
-          <ProfilePage path="/" />
+          <ProfilePage user={user} path="/" />
           <BDAdmin path="adminbd" />
         </Router>
      

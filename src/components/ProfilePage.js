@@ -16,7 +16,7 @@ class ProfilePage extends React.Component {
       <div>
         <NavBar/>
         <div className = "mx-auto col-md-12">
-            <ListaFolios/>
+            <ListaFolios user = {this.props.user}/>
           </div>
         </div>
     )

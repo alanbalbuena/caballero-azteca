@@ -1,7 +1,8 @@
-import React, { Component } from "react";
+import React, { useContext, Component } from "react";
 import { storage, db } from "../util/firebase";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ReactExport from "react-export-excel";
+import {auth} from '../util/firebase'
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -19,7 +20,9 @@ class ListaFolios extends Component {
       razon: '',
       ruta: '',
       filtro: '',
-      pedido: []
+      pedido: [],
+      user: props.user,
+      permiso: ''
     };
 
     this.handleChangeFecha = this.handleChange.bind(this);
@@ -188,9 +191,9 @@ class ListaFolios extends Component {
         status: true,
       }, (error) => {
         if (error) {
-
+          alert("Error al actualizar estado de folio.")
         } else {
-
+          alert("Estatus de folio actualizado.")
         }
       });
     });
@@ -267,13 +270,29 @@ class ListaFolios extends Component {
     }
  
   }
-  generar(){
 
-    console.log(this.state.pedido);
+  permisos(){
 
+    auth.onAuthStateChanged(user => {
+      if (user) {
+          this.setState({...this.state.user, user: user});
+          console.log("USUARRRRIOOOOOOO" + JSON.stringify(user));
+      }
+    }).bind(this);
+
+    const currentuser = this.state.user.uid;
+    const userRef = db.ref('/Usuario/' + currentuser)
+    var snapshotObtenido = [];
+  
+    userRef.on('value', (snapshot) => {
+      snapshotObtenido = snapshot.val();
+      this.setState({permiso: snapshotObtenido.permisos})
+    });
+    
   }
 
   componentDidMount() {
+    this.permisos();
     this.peticionGet();
   }
 
@@ -284,6 +303,7 @@ class ListaFolios extends Component {
     return (
       <div className="ListaFolios">
         <div className="flex border flex-col items-center border-blue-400 px-3 py-4">
+
           <form onSubmit={this.handleSubmit}>
             <ul className="row">
               <h1 className="text-center col-1 strong"><strong>FILTROS:</strong></h1>
@@ -303,8 +323,24 @@ class ListaFolios extends Component {
               <input
                 className="btn btn-danger col-1"
                 type="submit" value="FILTRAR" />
+              <ExcelFile element={<button className="btn btn-primary">GENERAR EXCEL</button>} filename = "ExcelPedido">
+                <ExcelSheet data={this.state.pedido ? this.state.pedido : null} name = "Pedido">
+                    <ExcelColumn label = "Fecha" value = "fecha"/>  
+                    <ExcelColumn label = "Folio" value = "folio"/>
+                    <ExcelColumn label = "Vendedor" value = "vendedor"/>
+                    <ExcelColumn label = "Ruta" value = "ruta"/>
+                    <ExcelColumn label = "Factura o registro" value = "tipoDocumento"/>
+                    <ExcelColumn label = "Codigo" value = "codigoCliente"/>
+                    <ExcelColumn label = "RFC" value = "rfc"/>
+                    <ExcelColumn label = "Ciudad" value = "ciudad"/>
+                    <ExcelColumn label = "Telefono" value = "telefono"/>
+                    <ExcelColumn label = "Total" value = "total"/>
+                    <ExcelColumn label = "Observaciones" value = "observaciones"/>
+                </ExcelSheet>
+              </ExcelFile>    
             </ul>
           </form>
+
         </div>
         <table className="table table-bordered">
           <thead>
@@ -340,23 +376,14 @@ class ListaFolios extends Component {
                 <td>
                   <button className="btn btn-primary" onClick={() => this.actionChooser(folio, folio.folio, 'excel')}>EXCEL</button>
                   <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'pdf')}>PDF</button>
+                  {this.state.permiso === "administrador" && 
+                  <>
                   <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'imprimir')}>IMPRIMIR</button>
                   <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'eliminar')}>ELIMINAR</button>
-                  <ExcelFile element={<button className="btn btn-danger">GENERAR EXCEL</button>} filename = "ExcelPedido">
-                    <ExcelSheet data={this.state.pedido ? this.state.pedido : null} name = "Pedido">
-                        <ExcelColumn label = "Fecha" value = "fecha"/>  
-                        <ExcelColumn label = "Folio" value = "folio"/>
-                        <ExcelColumn label = "Vendedor" value = "vendedor"/>
-                        <ExcelColumn label = "Ruta" value = "ruta"/>
-                        <ExcelColumn label = "Factura o registro" value = "tipoDocumento"/>
-                        <ExcelColumn label = "Codigo" value = "codigoCliente"/>
-                        <ExcelColumn label = "RFC" value = "rfc"/>
-                        <ExcelColumn label = "Ciudad" value = "ciudad"/>
-                        <ExcelColumn label = "Telefono" value = "telefono"/>
-                        <ExcelColumn label = "Total" value = "total"/>
-                        <ExcelColumn label = "Observaciones" value = "observaciones"/>
-                    </ExcelSheet>
-                  </ExcelFile>
+                  </>
+                  } 
+                  
+                
                 </td>
                 <td>{folio.status === true ? <p>IMPRESO</p> : <p>NO IMPRESO</p>}</td>
               </tr>
