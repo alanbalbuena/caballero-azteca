@@ -4,10 +4,8 @@ import NavBar from "./NavBar";
 import { UserContext } from "../providers/UserProvider";
 import SignUp from "./SignUp";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Link } from '@reach/router';
 import * as XLSX from 'xlsx'
 import {db} from '../util/firebase';
-
 
 
 class BDAdmin extends Component {
@@ -53,8 +51,9 @@ class BDAdmin extends Component {
                           let productosRemover = await new Promise(resolve => {
                             setTimeout(() => {
                               productoRef.remove()
+                              productoRef.set("")
                               resolve(true);
-                            }, 15000);
+                            }, 10000);
                           });
                           if(productosRemover){
                             productoRef.set(json);
@@ -87,8 +86,9 @@ class BDAdmin extends Component {
                             let clientsRemove = await new Promise(resolve => {
                               setTimeout(() => {
                                 clientesRef.remove()
+                                clientesRef.set("")
                                 resolve(true);
-                              }, 15000);
+                              }, 10000);
                             });
                             if(clientsRemove){
                               clientesRef.set(json);

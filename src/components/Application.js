@@ -1,15 +1,11 @@
 import React, { useContext } from "react";
-import { Router } from "@reach/router";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import SignIn from "./SignIn";
 import SignUp from "./SignUp";
-import UserProvider from "../providers/UserProvider";
 import ProfilePage from "./ProfilePage";
 import { UserContext } from "../providers/UserProvider";
 import PasswordReset from "./PasswordReset";
-import { Suspense } from "react";
-import ListaFolios from "./ListaFolios";
 import BDAdmin from "./BDAdmin";
-import { Route, Switch } from "react-router-dom";
 
 function Application() {
 
@@ -17,21 +13,21 @@ function Application() {
 
   return (
 
+    user ?
 
-        user ?
-        
-        <Router>
-          <ProfilePage user={user} path="/" />
-          <BDAdmin path="adminbd" />
-        </Router>
-     
+      <Router>
+        <Route path="/" exact component={ProfilePage} />
+        <Route path="/adminbd" component={BDAdmin} />
+      </Router>
+
       :
-        <Router>
-          <SignUp path="signUp" />
-          <SignIn path="/" />
-          <PasswordReset path = "passwordReset" />
-        </Router>
       
+      <Router>
+        <Route path="/" exact component={SignIn} />
+        <Route path="/signUp" component={SignUp} />
+        <Route path="/passwordReset" component={PasswordReset} />
+      </Router>
+
   );
 }
 

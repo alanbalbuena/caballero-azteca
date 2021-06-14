@@ -1,26 +1,24 @@
-import React, { useContext } from "react";
-import { UserContext } from "../providers/UserProvider";
+import React, {Component} from "react";
 import NavBar from "./NavBar";
 import ListaFolios from "./ListaFolios";
 
-class ProfilePage extends React.Component {
+class ProfilePage extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {};               
-    const user = UserContext;
   }
 
-  render() {
+  render(){
     return (
       <div>
         <NavBar/>
-        <div className = "mx-auto col-md-12">
-            <ListaFolios user = {this.props.user}/>
-          </div>
+        <div className="mx-auto col-md-12">
+            <ListaFolios location={this.props.location}/>
         </div>
+      </div>
     )
   }
+
 }
 
 export default ProfilePage;
