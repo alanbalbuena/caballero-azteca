@@ -1,14 +1,13 @@
 import React, { Component } from "react";
+import { IoAlert } from 'react-icons/io5';
 import { animateScroll as scroll } from 'react-scroll'
 import { storage, db } from "../util/firebase";
 import "bootstrap/dist/css/bootstrap.min.css";
-import ReactExport from "react-export-excel";
 import { auth } from '../util/firebase'
 import { Suspense } from "react";
-
-const ExcelFile = ReactExport.ExcelFile;
-const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
-const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
+import ReactExport from "react-export-excel";
+import ExcelDocument from '../components/ExcelDocument'
+import BarraHerramientas from '../components/BarraHerramientas'
 
 class ListaFolios extends Component {
 
@@ -37,7 +36,6 @@ class ListaFolios extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
 
   }
-
 
   handleChange(event) {
 
@@ -172,8 +170,6 @@ class ListaFolios extends Component {
         let folios = snapshot.val();
         if (folios.folio == id) {
           ref.child(snapshot.key).remove();
-          alert("Folio: " + id + " eliminado correctamente.")
-          window.location.href = window.location.href;
         }
       });
     }
@@ -188,15 +184,41 @@ class ListaFolios extends Component {
 
     var storageRef = storage.ref(usuario + "/" + tipo + "/" + id + "/" + fileType);
 
-
-
     var ref = db.ref("Folio");
     ref.orderByChild("folio").equalTo(id).on("child_added", function (snapshot) {
+      
+      let data = snapshot.val();
       let key = snapshot.key;
-      if(ref.child(key).status === "autorizado"){
-        
-        storageRef.getDownloadURL().then(function (url) {
 
+      if (data.status === "autorizado" && window.confirm("Desea cambiar el status del folio: " + id + " a IMPRESO?")) {
+
+
+        ref.child(key).update({
+          status: 'impreso',
+        }, (error) => {
+          if (error) {
+            alert("Error al intentar cambiar a status de impreso.")
+          } else {
+            storageRef.getDownloadURL().then(function (url) {
+              var xhr = new XMLHttpRequest();
+              xhr.responseType = 'blob';
+              xhr.onload = function (event) {
+                var blob = xhr.response;
+              };
+              xhr.open('GET', url);
+              xhr.send();
+              window.open(url, '_blank');
+              window.location.href = window.location.href;
+            }).catch(function (error) {
+              console.log(error)
+            });
+          }
+        });
+        
+      } else if (data.status === "noautorizado") {
+        alert("Folio: " + id + " no esta autorizado.")
+      } else if (data.status === "impreso"){
+          storageRef.getDownloadURL().then(function (url) {
           var xhr = new XMLHttpRequest();
           xhr.responseType = 'blob';
           xhr.onload = function (event) {
@@ -205,52 +227,40 @@ class ListaFolios extends Component {
           xhr.open('GET', url);
           xhr.send();
           window.open(url, '_blank');
-    
         }).catch(function (error) {
           console.log(error)
         });
-
-        ref.child(key).update({
-          status: 'impreso',
-        }, (error) => {
-          if (error) {
-            alert("Error al intentar imprimir folio.")
-          } else {
-            alert("Folio: " + id + " listo para imprimir.")
-            window.location.href = window.location.href;
-          }
-        });
-
-      } else {
-        alert("Folio: " + id + " no esta autorizado.")
       }
 
+
     });
+
   }
 
   autorizar = (id) => {
 
     var ref = db.ref("Folio");
-    if (window.confirm("Desea autorizar el folio " + id)) {
+
       ref.orderByChild("folio").equalTo(id).on("child_added", function (snapshot) {
+
+        let data = snapshot.val();
         let key = snapshot.key;
-        if(ref.child(key).status === "noautorizado" 
-              || ref.child(key).status === false || ref.child(key).status === true){ //AQUI SE DEBEN ELIMINAR LOS ESTATUS BOOLEANOS
+
+        if (data.status === "noautorizado" && window.confirm("Desea autorizar el folio: " + id + "?")) {
           ref.child(key).update({
             status: 'autorizado',
           }, (error) => {
             if (error) {
               alert("Error al actualizar estado de folio.")
             } else {
-              alert("Folio: " + id + " autorizado.")
               window.location.href = window.location.href;
             }
           });
+
         } else {
           alert("Ya se encuentra autorizado.")
         }
       });
-    }
   }
 
   downloadFile = (type, id) => {
@@ -261,8 +271,6 @@ class ListaFolios extends Component {
     var tipo = id.substring(0, 1);
 
     var storageRef = storage.ref(usuario + "/" + tipo + "/" + id + "/" + fileType);
-
-    console.log(storageRef)
 
     storageRef.getDownloadURL().then(function (url) {
       var xhr = new XMLHttpRequest();
@@ -342,7 +350,7 @@ class ListaFolios extends Component {
 
   }
 
-  getFolioStatus(status, numeroFactura) {
+  getFolioStatus(status, numeroFactura, repartidor ) {
     switch (status) {
       case 'noautorizado':
         return 'NO AUTORIZADO'
@@ -355,13 +363,13 @@ class ListaFolios extends Component {
       case 'enfacturacion':
         return 'EN FACTURACION'
       case 'facturado':
-        return 'FACTURADO\n Factura# ' + numeroFactura
+        return numeroFactura
       case 'entransito':
         return 'EN TRANSITO'
       case 'entregado':
-        return 'ENTREGADO'
+        return 'ENTREGADO' + '\n' + numeroFactura + '\nPor: ' + repartidor
       default:
-        return 'NO IMPRESO'
+        return 'DESCONOCIDO'
     }
   }
 
@@ -412,27 +420,7 @@ class ListaFolios extends Component {
               <input
                 className="btn btn-danger"
                 type="submit" value="FILTRAR/MOSTRAR" onClick={(e) => this.handleSubmit(e)} />
-              <ExcelFile element={<button className="btn btn-primary">GENERAR EXCEL</button>} filename="ExcelPedido">
-                <ExcelSheet data={this.state.pedido ? this.state.pedido : null} name="Pedido">
-                  <ExcelColumn label="FECHA" value="fecha" />
-                  <ExcelColumn label="FOLIO" value="folio" />
-                  <ExcelColumn label="ID CLIENTE" value="codigoCliente" />
-                  <ExcelColumn label="CLIENTE" value="razon" />
-                  <ExcelColumn label="IMPORTE" value="total" />
-                  <ExcelColumn label="CIUDAD" value="ciudad" />
-                  <ExcelColumn label="RUTA" value="ruta" />
-                  <ExcelColumn label="VENDEDOR" value="vendedor" />
-                  <ExcelColumn label="FACTURA O REGISTRO" value="tipoDocumento" />
-                </ExcelSheet>
-                <ExcelSheet data={this.state.productos ? this.state.productos : null} name="Productos">
-                  <ExcelColumn label="FOLIO" value="folio" />
-                  <ExcelColumn label="ID" value="id" />
-                  <ExcelColumn label="CANTIDAD" value="cantidad" />
-                  <ExcelColumn label="MARCA" value="marca" />
-                  <ExcelColumn label="NOMBRE" value="nombre" />
-                  <ExcelColumn label="PRECIO" value="precio" />
-                </ExcelSheet>
-              </ExcelFile>
+                <ExcelDocument data = {this.state.pedido} products={this.state.productos}/>
             </ul>
           </div>
         </div>
@@ -470,27 +458,15 @@ class ListaFolios extends Component {
                   <td>{folio.ruta}</td>
                   <td>{folio.total}</td>
                   <td>
-                    <button className="btn btn-primary" onClick={() => this.actionChooser(folio, folio.folio, 'excel')}>EXCEL</button>
-                    <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'pdf')}>PDF</button>
-                    {
-                    (this.state.permiso === "administrador" && folio.status == "autorizado") &&
-                      <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'imprimir')}>IMPRIMIR</button>
-                    }
-                    {
-                      this.state.permiso === "superusuario" &&
-                      <>
-                        <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'imprimir')}>IMPRIMIR</button>
-                        <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'autorizar')}>AUTORIZAR</button>
-                        <button className="btn btn-danger" onClick={() => this.actionChooser(folio, folio.folio, 'eliminar')}>ELIMINAR</button>
-                      </>
-                    }
+                    <BarraHerramientas permiso = {this.state.permiso} folio = {folio}  action = {this.actionChooser}/>
                   </td>
-                  <td>
+                  <td className="text-center">
                     <p>
                       {
-                        this.getFolioStatus(folio.status, folio.numeroFactura) 
+                        this.getFolioStatus(folio.status, folio.numeroFactura, folio.repartidor)
                       }
                     </p>
+                    <button className="btn btn-danger rounded-circle"><IoAlert className="text"/></button>
                   </td>
                 </tr>
 
@@ -504,8 +480,8 @@ class ListaFolios extends Component {
           <div className="col-auto text-center mb-4"><button className="btn btn-primary" onClick={() => this.showAllFolios()}>VER TODOS</button></div>
         </div>
         <div className="fixed-bottom mb-3 ml-3">
-          <button onClick={() => scroll.scrollToTop()}><spam className="h3">⬆</spam></button>
-          <button onClick={() => scroll.scrollToBottom()}><spam className="h3">⬇</spam></button>
+          <button onClick={() => scroll.scrollToTop()}><span className="h3">⬆</span></button>
+          <button onClick={() => scroll.scrollToBottom()}><span className="h3">⬇</span></button>
         </div>
       </div>);
   }
