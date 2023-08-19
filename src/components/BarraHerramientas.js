@@ -1,4 +1,5 @@
 import React from 'react'
+import { AiFillFileExcel , AiFillFilePdf, AiFillPrinter, AiTwotoneDelete, AiFillCheckCircle} from 'react-icons/ai';
 
 const BarraHerramientas = (props) => {
 
@@ -14,11 +15,11 @@ const BarraHerramientas = (props) => {
             case "superusuario":
                 return (
                 <div>
-                    <button className="btn btn-primary" onClick={() => actionChooser(folio, folio.folio, 'excel')}>EXCEL</button>
-                    <button className="btn btn-danger" onClick={() => actionChooser(folio, folio.folio, 'pdf')}>PDF</button>
-                    <button className="btn btn-danger" onClick={() => actionChooser(folio, folio.folio, 'imprimir')}>IMPRIMIR</button>
-                    <button className="btn btn-primary" onClick={() => actionChooser(folio, folio.folio, 'autorizar')}>AUTORIZAR</button>
-                    <button className="btn btn-danger" onClick={() => actionChooser(folio, folio.folio, 'eliminar')}>ELIMINAR</button>
+                    <button onClick={() => actionChooser(folio, folio.folio, 'excel')}><AiFillFileExcel color='C0C0C0' size={30}/></button>
+                    <button onClick={() => actionChooser(folio, folio.folio, 'pdf')}><AiFillFilePdf color='C0C0C0'size={30}/></button>
+                    <button onClick={() => actionChooser(folio, folio.folio, 'imprimir')}><AiFillPrinter color='C0C0C0'size={30}/></button>
+                    <button onClick={() => actionChooser(folio, folio.folio, 'autorizar')}><AiFillCheckCircle color='C0C0C0' size={30}/></button>
+                    <button onClick={() => actionChooser(folio, folio.folio, 'eliminar')}><AiTwotoneDelete color='C0C0C0' size={30}/></button>
                 </div> )
             case "administrador":
                 return (

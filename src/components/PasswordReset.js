@@ -3,17 +3,15 @@ import { Link } from "@reach/router";
 
 const PasswordReset = () => {
   const [email, setEmail] = useState("");
-  const [emailHasBeenSent, setEmailHasBeenSent] = useState(false);
-  const [error, setError] = useState(null);
+  const [emailHasBeenSent] = useState(false);
+  const [error] = useState(null);
   const onChangeHandler = event => {
     const { name, value } = event.currentTarget;
     if (name === "userEmail") {
       setEmail(value);
     }
   };
-  const sendResetEmail = event => {
-    event.preventDefault();
-  };
+
   return (
     <div className="mt-8">
       <h1 className="text-xl text-center font-bold mb-3">

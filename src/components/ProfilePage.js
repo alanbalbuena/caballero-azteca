@@ -4,10 +4,6 @@ import ListaFolios from "./ListaFolios";
 
 class ProfilePage extends Component {
 
-  constructor(props) {
-    super(props);
-  }
-
   render(){
     return (
       <div>

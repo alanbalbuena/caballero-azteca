@@ -1,91 +1,83 @@
 import React, { useState, useEffect } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Link } from "react-router-dom";
-import { db, auth } from "../util/firebase";
+import { Link, useNavigate } from "react-router-dom";
+import { ref, onValue } from "firebase/database";
+import { onAuthStateChanged, signOut, getAuth } from "firebase/auth";
+import { db, auth } from '../util/firebase';
 
-const NavBar = (props) => {
-
+function NavBar() {
+  const navigate = useNavigate();
   const [permisos, setPermisos] = useState()
-  const [usuario, setUsuario] = useState()
 
   useEffect(() => {
-
-    auth.onAuthStateChanged(user => {
-
+    onAuthStateChanged(auth, user => {
       if (user) {
-
-        const userRef = db.ref('/Usuario/' + user.uid)
-        var snapshotObtenido = [];
-
-        userRef.on('value', (snapshot) => {
-          snapshotObtenido = snapshot.val();
-          setPermisos(snapshotObtenido.permisos)
-          setUsuario(snapshotObtenido)
+        let userRef = ref(db, '/Usuario/' + auth.currentUser.uid)
+        onValue(userRef, (snapshot) => {
+          let data = snapshot.val();
+          setPermisos(data.permisos);
+        }, {
+          onlyOnce: true
         });
-
+      } else {
+        navigate('/');
       }
     }).bind(this);
 
-  }, [])
+  })
+
 
   function close() {
-    auth.signOut()
-    window.location.reload();
+    signOut(getAuth()).then(() => {
+      window.location.reload(false);
+    }).catch((error) => {
+      console.log("ocurrio el siguiente error al intentar cerrar sesion: " + error);
+    });
   }
 
   return (
-    <nav className="col-sm-12 navbar navbar-expand-lg navbar-light bg-light">
-      <div
-        style={{
-          background: `url('https://firebasestorage.googleapis.com/v0/b/caballero-azteca-ventas.appspot.com/o/src%2Flogo.png?alt=media&token=9db8fc2e-3896-4646-9c15-ef9508763e4b')  no-repeat center center`,
-          backgroundSize: "fit",
-          height: "150px",
-          width: "150px"
-        }}
-        className=""></div>
-      <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span className="navbar-toggler-icon"></span>
-      </button>
-      <div className="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul className="navbar-nav">
-          <li className="nav-item">
-            <Link
-              className="nav-link"
-              to={{
-                pathname: '/',
-                state: {
-                  tipo: 'folios'
-                }
-              }}
-            >
-              <strong>Folios</strong></Link>
-          </li>
-          <li className="nav-item">
-            <Link
-              className="nav-link"
-              to={{
-                pathname: '/',
-                state: {
-                  tipo: 'cotizaciones'
-                }
-              }}
-            >
-              <strong>Cotizaciones</strong></Link>
-          </li>
-          {
-            permisos === "superusuario" &&
+    <nav className="container navbar navbar-expand-lg bg-body-tertiary">
+      <div className="container-fluid">
+        <a className="navbar-brand" href="/">
+          <img src='https://firebasestorage.googleapis.com/v0/b/caballero-azteca-ventas.appspot.com/o/src%2Flogo.png?alt=media&token=9db8fc2e-3896-4646-9c15-ef9508763e4b' alt="logo"></img>
+        </a>
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              <Link className="nav-link" to="/adminbd"><strong>Bases de datos</strong></Link>
+              <Link className="nav-link" to="/folios">Folios</Link>
             </li>
-          }
-
-        </ul>
-        <ul className="ml-auto">
-          <li>
-            <button className="mx-auto pull-right btn btn-danger"
-              onClick={() => { close() }}><Link to="/">Cerrar sesion</Link></button>
-          </li>
-        </ul>
+            {/*<li className="nav-item">
+              <Link className="nav-link" to='/cotizaciones'>Cotizaciones</Link>
+            </li> */}
+            {
+              permisos === "superusuario" &&
+              <li className="nav-item">
+                <Link className="nav-link" to="/adminbd">Bases de datos</Link>
+              </li>
+            }
+            {
+              permisos === "superusuario" &&
+              <li className="nav-item">
+                <Link className="nav-link" to="/usuarios">Usuarios</Link>
+              </li>
+            }
+            {
+              permisos === "superusuario" &&
+              <li className="nav-item">
+                <Link className="nav-link" to="/clientes">Clientes</Link>
+              </li>
+            }
+            {/* <li className="nav-item">
+              <Link className="nav-link" to="/ejemplo">Ejemplo</Link>
+            </li> */}
+          </ul>
+          <ul className="ml-auto">
+            <li>
+              <button className="mx-auto pull-right btn btn-danger"
+                onClick={() => { close() }}>Cerrar sesion</button>
+            </li>
+          </ul>
+        </div>
       </div>
     </nav>
   );

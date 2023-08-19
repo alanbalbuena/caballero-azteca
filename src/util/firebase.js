@@ -1,64 +1,35 @@
-import firebase from 'firebase';
+import { initializeApp } from "firebase/app";
+import { getDatabase, } from "firebase/database";
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
-const firebaseConfig = {
+const entornoPruduccion = false;
+
+const firebaseConfigTest = {
+  apiKey: "AIzaSyD5ceEqOwx_vgWHhuuAhrAk8nQ6fbVYIGM",
+  authDomain: "caballero-azteca-ventas.firebaseapp.com",
+  databaseURL: "https://caballero-azteca-ventas-testing.firebaseio.com",
+  projectId: "caballero-azteca-ventas",
+  storageBucket: "caballero-azteca-ventas-testing",
+  messagingSenderId: "232273736551",
+  appId: "1:232273736551:web:bc5e373f23be8dddf635c2",
+  measurementId: "G-9HJ2J1FX4J"
+};
+
+const firebaseConfigProd = {
   apiKey: "AIzaSyD5ceEqOwx_vgWHhuuAhrAk8nQ6fbVYIGM",
   authDomain: "caballero-azteca-ventas.firebaseapp.com",
   databaseURL: "https://caballero-azteca-ventas.firebaseio.com",
   projectId: "caballero-azteca-ventas",
   storageBucket: "caballero-azteca-ventas.appspot.com",
   messagingSenderId: "232273736551",
-  appId: "1:232273736551:web:8f2f92bcd26f6f4df635c2",
-  measurementId: "G-WLZ6ZS74NV"
+  appId: "1:232273736551:web:bc5e373f23be8dddf635c2",
+  measurementId: "G-9HJ2J1FX4J"
 };
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-export const auth = firebase.auth();
-export const db = firebase.database();
-export const storage = firebase.storage();
+var firebase = null;
+export default firebase = initializeApp(entornoPruduccion ? firebaseConfigProd : firebaseConfigTest);
+export const db = getDatabase(firebase);
+export const auth = getAuth();
+export const varStorage = getStorage();
 
-export default firebase;
-
-const provider = new firebase.auth.GoogleAuthProvider();
-
-export const signInWithGoogle = () => {
-  auth.signInWithPopup(provider);
-};
-
-export const generateUserDocument = async (user, additionalData) => {
-
-  if (!user) return;
-
-  const currentuser = auth.currentUser.uid;
-  const userRef = db.ref('/Usuario/' + currentuser)
-  var snapshotObtenido = [];
-
-  userRef.on('value', (snapshot) => {
-    snapshotObtenido = snapshot.val();
-  });
-
-  return getUserDocument(user.uid);
-};
-
-const getUserDocument = async uid => {
-
-  const currentuser = auth.currentUser.uid;
-  const userRef = db.ref('/Usuario/' + currentuser)
-  var snapshotObtenido = [];
-
-  userRef.on('value', (snapshot) => {
-    snapshotObtenido = snapshot.val();
-  });
-
-
-  if (!uid) return null;
-  try {
-
-    const userDocument = auth.currentUser.uid;
-    return {
-      uid,
-      ...snapshotObtenido
-    };
-  } catch (error) {
-    console.error("Error fetching user", error);
-  }
-};
