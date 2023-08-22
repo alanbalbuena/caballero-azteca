@@ -10,16 +10,12 @@ import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import printJS from 'print-js'
-
 
 export default function ListaFolios() {
   const [listaFolios, setListaFolios] = useState([]);
   const [userPermiso, setUserPermiso] = useState();
   const [isLoading, setIsLoading] = useState(true);
-  const foliosRef = query(ref(db, 'Folio'), limitToLast(100), orderByKey());
-
-  //onst foliosRef = ref(db, 'Folio');
+  const foliosRef = query(ref(db, 'Folio'), limitToLast(300), orderByKey());
 
   const columns = useMemo(
     () => [
@@ -73,8 +69,6 @@ export default function ListaFolios() {
     ],
     []
   );
-
-
 
   /* const peticionDelete = async (id) => {
 
@@ -152,8 +146,6 @@ export default function ListaFolios() {
 
   }
 
-
-
   function getFolios() {
     onValue(foliosRef, (snapshot) => {
       let list = []
@@ -169,6 +161,10 @@ export default function ListaFolios() {
           ruta: data.ruta,
           total: data.total,
           status: data.status,
+          ciudad: data.ciudad,
+          observaciones: data.observaciones,
+          codigoCliente: data.codigoCliente,
+          tipoDocumento: data.tipoDocumento,
           productos: data.listaDeProductos,
         });
       });
@@ -194,7 +190,7 @@ export default function ListaFolios() {
     useBom: true,
     useKeysAsHeaders: false,
     filename: 'Folios',
-    headers: ['Fecha', 'Folio', 'Vendedor', 'Cliente', 'Ruta', 'Total'],
+    headers: ['Fecha', 'Folio', 'Codigo Cliente' , 'Cliente', 'Importe','Agente', 'Ruta', 'Ciudad','Observaciones'],
   };
 
   const csvOptionsProductos = {
@@ -205,7 +201,7 @@ export default function ListaFolios() {
     useBom: true,
     useKeysAsHeaders: false,
     filename: 'Productos',
-    headers: ['Folio', 'Codigo', 'Cantidad', 'Marca', 'Nombre', 'Precio'],
+    headers: ['Folio', 'Cantidad', 'Codigo', 'Marca', 'Producto', 'Precio U','Sub Total','Tipo','Fecha','Agente','Codigo cliente','Nombre cliente','Ruta','Observaciones'],
   };
 
   const csvExporterFolios = new ExportToCsv(csvOptionsFolios);
@@ -215,25 +211,43 @@ export default function ListaFolios() {
     let listFolios = [];
     let listProductos = [];
 
-    rows.map((row) => {
-      row.original.productos.map((pro) => {
-        let data = {
-          folio: row.original.folio,
-          cantidad: pro.cantidad,
-          code: pro.code,
-          marca: pro.marca,
-          nombre: pro.nombre,
-          precio: pro.precio,
+    rows.map((f) => {
+      f.original.productos.map((p) => {
+        let dataProducto = {
+          folio: f.original.folio,
+          cantidad: p.cantidad,
+          code: p.code,
+          marca: p.marca,
+          nombre: p.nombre,
+          precio: f.original.tipoDocumento === 'factura' ? p.precio : (p.precio/1.16).toFixed(2),
+          subTotal: f.original.tipoDocumento === 'factura' ? p.precio*p.cantidad : ((p.precio/1.16)*p.cantidad).toFixed(2),
+          tipoDocumento: f.original.tipoDocumento,
+          fecha: f.original.fecha,
+          vendedor: f.original.vendedor,
+          codigoCliente: f.original.codigoCliente,
+          cliente: f.original.cliente,
+          ruta: f.original.ruta,
+          observaciones: f.original.observaciones,
         }
-        listProductos.push(data);
-        return null;
+       
+        listProductos.push(dataProducto);
+        //return null;
       })
 
-      delete row.original.key;
-      delete row.original.productos;
-      delete row.original.status;
-      listFolios.push(row.original)
-      return null;
+      let dataFolio = {
+        fecha: f.original.fecha,
+        folio: f.original.folio,
+        codigoCliente: f.original.codigoCliente,
+        cliente: f.original.cliente,
+        total: f.original.tipoDocumento === 'factura' ? f.original.total : (f.original.total / 1.16).toFixed(2),
+        vendedor: f.original.vendedor,
+        ruta: f.original.ruta,
+        ciudad: f.original.ciudad,
+        observaciones: f.original.observaciones,
+      }
+
+      listFolios.push(dataFolio);
+      //return null;
     })
 
     csvExporterFolios.generateCsv(listFolios);
