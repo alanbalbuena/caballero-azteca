@@ -1,21 +1,34 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { onValue, ref, query, limitToLast, onChildChanged, orderByKey, update } from "firebase/database";
-import { ref as xref, getDownloadURL } from "firebase/storage";
-import { varStorage, db, auth } from "../util/firebase";
+import { db, auth } from "../util/firebase";
 import { MaterialReactTable } from "material-react-table";
 import { ExportToCsv } from 'export-to-csv';
 import { Box, IconButton, Button } from '@mui/material';
+import { useReactToPrint } from 'react-to-print';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import logo from '../logo-caballero-azteca.jpg'
+import '../Styles/Components/pdf.css'
 
 export default function ListaFolios() {
   const [listaFolios, setListaFolios] = useState([]);
   const [userPermiso, setUserPermiso] = useState();
   const [isLoading, setIsLoading] = useState(true);
+  const [dataPdf, setDataPdf] = useState({});
+  const [marcaDeAgua, setMarcaDeAgua] = useState('');
   const foliosRef = query(ref(db, 'Folio'), limitToLast(300), orderByKey());
+
+  useEffect(() => {
+    getFolios();
+    obtenerPermisoUsuario();
+  }, []);
+
+  onChildChanged(foliosRef, () => {
+    getFolios();
+  });
 
   const columns = useMemo(
     () => [
@@ -84,45 +97,6 @@ export default function ListaFolios() {
     }
   }; */
 
-  const obtenerFolio = (data, tipo) => {
-    if (data.status === "autorizado" && window.confirm("Desea cambiar el status del folio: " + data.folio + " a IMPRESO?")) {
-
-      update(ref(db, '/Folio/' + data.key), {
-        status: 'impreso'
-      }).then(
-        descargarArchivo(data, tipo),
-      ).catch(error => {
-        alert("Error al intentar cambiar a status de impreso." + error)
-      })
-    } else if (data.status === "noautorizado") {
-      alert("Folio: " + data.folio + " no esta autorizado.")
-    } else if (data.status === "impreso") {
-      descargarArchivo(data, tipo)
-    }
-  }
-
-  function descargarArchivo(data, archivo) {
-    var fileType = (archivo === 'excel') ? "CAPedido.xls" : "CAPedido.pdf";
-    var usuario = data.folio.substring(1, 3);
-    var tipo = data.folio.substring(0, 1);
-    var storageRef = xref(varStorage, usuario + "/" + tipo + "/" + data.folio + "/" + fileType);
-
-    getDownloadURL(storageRef)
-      .then(function (url) {
-        var xhr = new XMLHttpRequest();
-        xhr.responseType = 'blob';
-        xhr.onload = function (event) {
-        };
-        xhr.open('GET', url);
-        xhr.send();
-        window.open(url, '_blank');
-        //printJS(url)
-
-      }).catch(function (error) {
-        alert("Hubo un error al intentar descargar el archivo")
-      })
-  }
-
   function autorizar(data) {
     if (data.status === "noautorizado") {
       if (window.confirm("Desea autorizar el folio: " + data.folio + "?")) {
@@ -160,27 +134,23 @@ export default function ListaFolios() {
           cliente: data.razon,
           ruta: data.ruta,
           total: data.total,
+          rfc: data.rfc,
+          domicilio: data.domicilio,
+          estado: data.estado,
+          email: data.email,
           status: data.status,
           ciudad: data.ciudad,
+          telefono: data.telefono,
           observaciones: data.observaciones,
           codigoCliente: data.codigoCliente,
           tipoDocumento: data.tipoDocumento,
-          productos: data.listaDeProductos,
+          productos: data.listaDeProductos.sort((a,b) => a.marca > b.marca ? 1 : -1),
         });
       });
       setListaFolios(list.reverse());
       setIsLoading(false);
     });
   }
-
-  useEffect(() => {
-    getFolios();
-    obtenerPermisoUsuario();
-  }, []);
-
-  onChildChanged(foliosRef, () => {
-    getFolios();
-  });
 
   const csvOptionsFolios = {
     fieldSeparator: ',',
@@ -190,7 +160,7 @@ export default function ListaFolios() {
     useBom: true,
     useKeysAsHeaders: false,
     filename: 'Folios',
-    headers: ['Fecha', 'Folio', 'Codigo Cliente' , 'Cliente', 'Importe','Agente', 'Ruta', 'Ciudad','Observaciones'],
+    headers: ['Fecha', 'Folio', 'Codigo Cliente', 'Cliente', 'Importe', 'Agente', 'Ruta', 'Ciudad', 'Observaciones'],
   };
 
   const csvOptionsProductos = {
@@ -201,7 +171,7 @@ export default function ListaFolios() {
     useBom: true,
     useKeysAsHeaders: false,
     filename: 'Productos',
-    headers: ['Folio', 'Cantidad', 'Codigo', 'Marca', 'Producto', 'Precio U','Sub Total','Tipo','Fecha','Agente','Codigo cliente','Nombre cliente','Ruta','Observaciones'],
+    headers: ['Folio', 'Cantidad', 'Codigo', 'Marca', 'Producto', 'Precio U', 'Sub Total', 'Tipo', 'Fecha', 'Agente', 'Codigo cliente', 'Nombre cliente', 'Ruta', 'Observaciones'],
   };
 
   const csvExporterFolios = new ExportToCsv(csvOptionsFolios);
@@ -219,8 +189,8 @@ export default function ListaFolios() {
           code: p.code,
           marca: p.marca,
           nombre: p.nombre,
-          precio: f.original.tipoDocumento === 'factura' ? p.precio : (p.precio/1.16).toFixed(2),
-          subTotal: f.original.tipoDocumento === 'factura' ? p.precio*p.cantidad : ((p.precio/1.16)*p.cantidad).toFixed(2),
+          precio: f.original.tipoDocumento === 'factura' ? p.precio : (p.precio / 1.16).toFixed(2),
+          subTotal: f.original.tipoDocumento === 'factura' ? p.precio * p.cantidad : ((p.precio / 1.16) * p.cantidad).toFixed(2),
           tipoDocumento: f.original.tipoDocumento,
           fecha: f.original.fecha,
           vendedor: f.original.vendedor,
@@ -229,9 +199,9 @@ export default function ListaFolios() {
           ruta: f.original.ruta,
           observaciones: f.original.observaciones,
         }
-       
+
         listProductos.push(dataProducto);
-        //return null;
+        return null;
       })
 
       let dataFolio = {
@@ -247,7 +217,7 @@ export default function ListaFolios() {
       }
 
       listFolios.push(dataFolio);
-      //return null;
+      return null;
     })
 
     csvExporterFolios.generateCsv(listFolios);
@@ -263,88 +233,205 @@ export default function ListaFolios() {
     }
   }
 
+  const generarPdf = (folio, formato) => {
+    setMarcaDeAgua(formato === 'generico' ? 'DOCUMENTO NO VALIDO' : '');
+    setDataPdf(folio)
+    setTimeout(() => {
+      handlePrint()
+    }, 10);
+  }
+
+  const componentRef = useRef();
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: 'Visitor Pass',
+    onAfterPrint: () => console.log('Printed PDF successfully!'),
+  });
+
+  function currencyFormat(num) {
+    return '$' + parseFloat(num).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+  }
+
   return (
-    <MaterialReactTable
-      columns={columns}
-      data={listaFolios}
-      initialState={{
-        showColumnFilters: true,
-        density: 'compact',
-        columnVisibility: { key: false, status: true },
-        /* sorting: [
-        { id: 'key', desc: true },
-      ],  */
-      }}
-      enableTopToolbar={true} //hide top toolbar
-      state={{ isLoading }} //or showSkeletons
-      positionActionsColumn="last"
-      enableRowActions
-      enableRowSelection
-      renderTopToolbarCustomActions={({ table }) => (
-        <Box sx={{ display: 'flex', gap: '1rem', p: '0.5rem', flexWrap: 'wrap' }}>
-          <Button
-            disabled={
-              !table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
-            }
-            //only export selected rows
-            onClick={() => handleExportRows(table.getSelectedRowModel().rows)}
-            startIcon={<FileDownloadIcon />}
-            variant="contained"
-          >
-            Exportar Excel
-          </Button>
-        </Box>
-      )}
-      renderRowActions={({ row }) => (
-        <Box>
-          <IconButton disabled={disabledButton(row.original.status)} onClick={() => obtenerFolio(row.original, "pdf")}>
-            <PictureAsPdfIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'primary'} />
-          </IconButton>
-          <IconButton onClick={() => obtenerFolio(row.original, "excel")}>
-            <TextSnippetIcon color="success" />
-          </IconButton>
-          <IconButton disabled={row.original.status === 'noautorizado' ? true : false} onClick={() => obtenerFolio(row.original, "pdf")}>
-            <LocalPrintshopIcon color={row.original.status === 'impreso' ? 'primary' : 'disabled'} />
-          </IconButton>
-          <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => autorizar(row.original)}>
-            <VerifiedIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'success'} />
-          </IconButton>
-        </Box>
-      )}
-      renderDetailPanel={({ row }) => (
-        <Box
-          sx={{
-            display: 'grid',
-            margin: 'auto',
-            gridTemplateColumns: '1fr 1fr',
-            width: '100%',
-            marginLeft: '200px'
+    <>
+      <div style={{ marginBottom: '900px' }}>
+        <MaterialReactTable
+          columns={columns}
+          data={listaFolios}
+          initialState={{
+            showColumnFilters: true,
+            density: 'compact',
+            columnVisibility: { key: false, status: true },
+            /* sorting: [
+            { id: 'key', desc: true },
+          ],  */
           }}
-        >
-          <table>
+          enableTopToolbar={true} //hide top toolbar
+          state={{ isLoading }} //or showSkeletons
+          positionActionsColumn="last"
+          enableRowActions
+          enableRowSelection
+          renderTopToolbarCustomActions={({ table }) => (
+            <Box sx={{ display: 'flex', gap: '1rem', p: '0.5rem', flexWrap: 'wrap' }}>
+              <Button
+                disabled={
+                  !table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
+                }
+                //only export selected rows
+                onClick={() => handleExportRows(table.getSelectedRowModel().rows)}
+                startIcon={<FileDownloadIcon />}
+                variant="contained"
+              >
+                Exportar Excel
+              </Button>
+            </Box>
+          )}
+          renderRowActions={({ row }) => (
+            <Box>
+              <IconButton disabled={disabledButton(row.original.status)} onClick={() => { generarPdf(row.original,'generico') }}>
+                <PictureAsPdfIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'primary'} />
+              </IconButton>
+              <IconButton onClick={() => handleExportRows([row])}>
+                <TextSnippetIcon color="success" />
+              </IconButton>
+              <IconButton disabled={(row.original.status === 'noautorizado' || row.original.status === 'impreso') ? (userPermiso === 'superusuario' ? false: true) : false} onClick={() => { generarPdf(row.original, 'original') }}>
+                <LocalPrintshopIcon color={row.original.status === 'impreso' ? 'primary' : 'disabled'} />
+              </IconButton>
+              <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => autorizar(row.original)}>
+                <VerifiedIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'success'} />
+              </IconButton>
+            </Box>
+          )}
+          renderDetailPanel={({ row }) => (
+            <Box
+              sx={{
+                display: 'grid',
+                margin: 'auto',
+                gridTemplateColumns: '1fr 1fr',
+                width: '100%',
+                marginLeft: '200px'
+              }}
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th>Codigo</th>
+                    <th>Cantidad</th>
+                    <th>Marca</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {row.original.productos.map((pro, index) => (
+                    <tr key={index}>
+                      <td>{pro.code}</td>
+                      <td>{pro.cantidad}</td>
+                      <td>{pro.marca}</td>
+                      <td>{pro.nombre}</td>
+                      <td>{pro.precio}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Box>
+          )}
+        />
+      </div>
+
+      {Object.entries(dataPdf).length === 0
+        ?
+        <></>
+        :
+        <div className='containerPDF' ref={componentRef}>
+
+          <div className='header'>
+            <img className='logo' src={logo} alt='logo' />
+            <div className='titulo'>
+              <h3>DISTRIBUIDORA FERRETERA CABALLERO AZTECA, S. A. DE C. V.</h3>
+              <p>JOSEMARIACOSS #1278-A</p>
+              <p>TEL. 38 23 76 32; FAX. 38 54 36 97</p>
+              <p>GUADALAJARA, JALISCO</p>
+              <p>Fecha y hora: {dataPdf.fecha}</p>
+            </div>
+          </div>
+          <p>Informacion General</p>
+          <table className="tblPdf">
+            <tbody>
+              <tr>
+                <td className='infGral'>FOLIO:</td>
+                <td>{dataPdf.folio}</td>
+              </tr>
+              <tr>
+                <td className='infGral'>VENDEDOR:</td>
+                <td>{dataPdf.vendedor}</td>
+              </tr>
+              <tr>
+                <td className='infGral'>RUTA:</td>
+                <td>{dataPdf.ruta}</td>
+              </tr>
+              <tr>
+                <td className='infGral'>FACTURA O REGISTRO:</td>
+                <td>{dataPdf.tipoDocumento}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div className='marcaAgua'>{marcaDeAgua}</div>
+          <p>Informacion sobre el cliente</p>
+          <table className="tblPdf">
+            <tbody>
+              <tr>
+                <td style={{ width: '10%' }}>CODIGO:</td>
+                <td style={{ width: '40%' }}>{dataPdf.codigoCliente}</td>
+                <td style={{ width: '10%' }}>RAZON:</td>
+                <td style={{ width: '40%' }}>{dataPdf.cliente}</td>
+              </tr>
+              <tr>
+                <td>RFC:</td>
+                <td>{dataPdf.rfc}</td>
+                <td>DOMICILIO:</td>
+                <td>{dataPdf.domicilio}</td>
+              </tr>
+              <tr>
+                <td>CIUDAD:</td>
+                <td>{dataPdf.ciudad}</td>
+                <td>ESTADO:</td>
+                <td>{dataPdf.estado}</td>
+              </tr>
+              <tr>
+                <td>TELEFONO:</td>
+                <td>{dataPdf.telefono}</td>
+                <td>EMAIL:</td>
+                <td>{dataPdf.email}</td>
+              </tr>
+            </tbody>
+          </table>
+          <table className="tblPdf">
             <thead>
               <tr>
-                <th>Codigo</th>
-                <th>Cantidad</th>
-                <th>Marca</th>
-                <th>Nombre</th>
-                <th>Precio</th>
+                <th>CANTIDAD</th>
+                <th>CODIGO</th>
+                <th>MARCA</th>
+                <th>DESCRIPCION DEL ARTICULO</th>
+                <th>PRECIO {dataPdf.tipoDocumento === 'factura' ? '' : '(SIN IVA)'}</th>
               </tr>
             </thead>
             <tbody>
-              {row.original.productos.map((pro, index) => (
+              {dataPdf.productos.map((p, index) => (
                 <tr key={index}>
-                  <td>{pro.code}</td>
-                  <td>{pro.cantidad}</td>
-                  <td>{pro.marca}</td>
-                  <td>{pro.nombre}</td>
-                  <td>{pro.precio}</td>
+                  <td>{p.cantidad}</td>
+                  <td>{p.code}</td>
+                  <td>{p.marca}</td>
+                  <td>{p.nombre}</td>
+                  <td>{currencyFormat(p.precio)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </Box>
-      )}
-    />
+          <p>Total: {currencyFormat(dataPdf.total)}</p>
+          <p>Observaciones: {dataPdf.observaciones}</p>
+        </div>
+      }
+    </>
   );
 }

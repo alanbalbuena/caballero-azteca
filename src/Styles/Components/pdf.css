@@ -1,0 +1,54 @@
+.containerPDF{
+    margin: 40px;
+}
+
+.tblPdf{
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.tblPdf td, .tblPdf th{
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 3px;
+}
+
+.tblPdf th{
+    background: #C0C0C0;
+}
+
+.logo {
+    width: 180px;
+    margin-right: 50px;
+}
+
+.header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.infGral {
+    width: 50%;
+}
+
+.marcaAgua{
+    transform: rotate(-45deg);
+     
+     align-items: center;
+     display: flex;
+     justify-content: center;
+     
+     left: 500px;
+     position: relative;
+     top: 100px;
+ 
+     height: 0;
+     width: 0;
+
+    font-size: 8rem;
+    font-weight: bold;
+    opacity: .1;
+}
