@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { onValue, ref, query, limitToLast, onChildChanged, orderByKey, update } from "firebase/database";
+import { onValue, ref, query, limitToLast, onChildChanged, orderByKey, update, remove } from "firebase/database";
 import { db, auth } from "../util/firebase";
 import { MaterialReactTable } from "material-react-table";
 import { ExportToCsv } from 'export-to-csv';
@@ -10,6 +10,7 @@ import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import logo from '../logo-caballero-azteca.jpg'
 import '../Styles/Components/pdf.css'
 
@@ -19,7 +20,8 @@ export default function ListaFolios() {
   const [isLoading, setIsLoading] = useState(true);
   const [dataPdf, setDataPdf] = useState({});
   const [marcaDeAgua, setMarcaDeAgua] = useState('');
-  const foliosRef = query(ref(db, 'Folio'), limitToLast(300), orderByKey());
+  const [textoConIva, setTextoConIva] = useState('');
+  const foliosRef = query(ref(db, 'Folio'), limitToLast(3), orderByKey());
 
   useEffect(() => {
     getFolios();
@@ -83,19 +85,16 @@ export default function ListaFolios() {
     []
   );
 
-  /* const peticionDelete = async (id) => {
-
-    var ref = this.state.tipo === "folios" ? db.ref("Folio") : db.ref("Cotizacion");
-
+  const handleDelete = async (key, id) => {
     if (window.confirm("Desea eliminar el folio " + id)) {
-      ref.on('child_added', (snapshot) => {
-        let folios = snapshot.val();
-        if (folios.folio === id) {
-          ref.child(snapshot.key).remove();
-        }
-      });
+      remove(ref(db, 'Folio/' + key))
+        .then(
+          console.log("Registro eliminado correctamente")
+        ).catch((error) => {
+          alert("Error al intentar borrar en la base de datos. error-> " + error)
+        })
     }
-  }; */
+  }
 
   function autorizar(data) {
     if (data.status === "noautorizado") {
@@ -144,7 +143,7 @@ export default function ListaFolios() {
           observaciones: data.observaciones,
           codigoCliente: data.codigoCliente,
           tipoDocumento: data.tipoDocumento,
-          productos: data.listaDeProductos.sort((a,b) => a.marca > b.marca ? 1 : -1),
+          productos: data.listaDeProductos.sort((a, b) => a.marca > b.marca ? 1 : -1),
         });
       });
       setListaFolios(list.reverse());
@@ -235,9 +234,11 @@ export default function ListaFolios() {
 
   const generarPdf = (folio, formato) => {
     setMarcaDeAgua(formato === 'generico' ? 'DOCUMENTO NO VALIDO' : '');
+    setTextoConIva(folio.tipoDocumento === 'factura' ? '(SIN IVA)' : '');
     setDataPdf(folio)
     setTimeout(() => {
       handlePrint()
+      update(ref(db,'Folio/'+folio.key),{status:'impreso'})
     }, 10);
   }
 
@@ -245,7 +246,9 @@ export default function ListaFolios() {
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
     documentTitle: 'Visitor Pass',
-    onAfterPrint: () => console.log('Printed PDF successfully!'),
+    onAfterPrint: () => {
+      console.log('Printed PDF successfully!')
+    },
   });
 
   function currencyFormat(num) {
@@ -288,17 +291,20 @@ export default function ListaFolios() {
           )}
           renderRowActions={({ row }) => (
             <Box>
-              <IconButton disabled={disabledButton(row.original.status)} onClick={() => { generarPdf(row.original,'generico') }}>
+              <IconButton disabled={disabledButton(row.original.status)} onClick={() => { generarPdf(row.original, 'generico') }}>
                 <PictureAsPdfIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'primary'} />
               </IconButton>
               <IconButton onClick={() => handleExportRows([row])}>
                 <TextSnippetIcon color="success" />
               </IconButton>
-              <IconButton disabled={(row.original.status === 'noautorizado' || row.original.status === 'impreso') ? (userPermiso === 'superusuario' ? false: true) : false} onClick={() => { generarPdf(row.original, 'original') }}>
+              <IconButton disabled={(row.original.status === 'noautorizado' || row.original.status === 'impreso') ? (userPermiso === 'superusuario' ? false : true) : false} onClick={() => { generarPdf(row.original, 'original') }}>
                 <LocalPrintshopIcon color={row.original.status === 'impreso' ? 'primary' : 'disabled'} />
               </IconButton>
               <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => autorizar(row.original)}>
                 <VerifiedIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'success'} />
+              </IconButton>
+              <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleDelete(row.original.key, row.original.folio)}>
+                <DeleteForeverIcon color='error'/>
               </IconButton>
             </Box>
           )}
@@ -413,7 +419,7 @@ export default function ListaFolios() {
                 <th>CODIGO</th>
                 <th>MARCA</th>
                 <th>DESCRIPCION DEL ARTICULO</th>
-                <th>PRECIO {dataPdf.tipoDocumento === 'factura' ? '' : '(SIN IVA)'}</th>
+                <th>PRECIO {textoConIva}</th>
               </tr>
             </thead>
             <tbody>

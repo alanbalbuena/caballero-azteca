@@ -7,6 +7,7 @@
     border-collapse: collapse;
     width: 100%;
     margin-bottom: 30px;
+    font-weight: bold;
 }
 
 .tblPdf td, .tblPdf th{
