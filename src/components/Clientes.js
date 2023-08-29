@@ -43,7 +43,7 @@ export default function Clientes() {
     useEffect(() => {
         getClientes();
         // addCliente();
-    })
+    },[])
 
     onChildChanged(clientesRef, () => {
         getClientes();

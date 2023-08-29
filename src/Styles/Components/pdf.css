@@ -53,3 +53,9 @@
     font-weight: bold;
     opacity: .1;
 }
+
+.firmaElectronica{
+    text-align: right;
+    font-size: 25px;
+    font-weight: bold;
+}

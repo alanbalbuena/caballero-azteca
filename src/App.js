@@ -13,11 +13,13 @@ import { auth } from "./util/firebase";
 export default function App() {
 
   const [banera, setBandera] = useState(false);
+  const [nombreUsuario, setNombreUsuario] = useState();
 
   useEffect(() => {
     onAuthStateChanged(auth, user => {
       if (user) {
         setBandera(true);
+        setNombreUsuario(user.displayName);
         
       }
     }).bind(this);
@@ -29,7 +31,7 @@ export default function App() {
       <>
         <NavBar />
         <Routes>
-          <Route path="/folios" element={<ListaFolios />} />
+          <Route path="/folios" element={<ListaFolios nombre = {nombreUsuario}/>} />
           <Route path="/adminbd" element={<BDAdmin />} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/clientes" element={<Clientes />} />

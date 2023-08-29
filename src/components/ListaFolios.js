@@ -1,34 +1,39 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { onValue, ref, query, limitToLast, onChildChanged, orderByKey, update, remove } from "firebase/database";
+import { onValue, ref, query, limitToLast, onChildChanged, orderByKey, update, remove, orderByChild, equalTo } from "firebase/database";
 import { db, auth } from "../util/firebase";
 import { MaterialReactTable } from "material-react-table";
 import { ExportToCsv } from 'export-to-csv';
 import { Box, IconButton, Button } from '@mui/material';
 import { useReactToPrint } from 'react-to-print';
+import Modal from '@mui/material/Modal';
+import Typography from '@mui/material/Typography';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import InfoIcon from '@mui/icons-material/Info';
 import logo from '../logo-caballero-azteca.jpg'
 import '../Styles/Components/pdf.css'
 
-export default function ListaFolios() {
+export default function ListaFolios(prop) {
+  const [nombreUsuario] = useState(prop.nombre);
   const [listaFolios, setListaFolios] = useState([]);
   const [userPermiso, setUserPermiso] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [dataPdf, setDataPdf] = useState({});
   const [marcaDeAgua, setMarcaDeAgua] = useState('');
   const [textoConIva, setTextoConIva] = useState('');
-  const foliosRef = query(ref(db, 'Folio'), limitToLast(3), orderByKey());
+  const [firmaElectronica, setFirmaElectronica] = useState('');
+  const numeroRegistros = 300;
+  //const foliosRef = query(ref(db, 'Folio'), limitToLast(3), orderByKey());
 
   useEffect(() => {
     getFolios();
-    obtenerPermisoUsuario();
   }, []);
 
-  onChildChanged(foliosRef, () => {
+  onChildChanged(ref(db, 'Folio'), () => {
     getFolios();
   });
 
@@ -100,7 +105,8 @@ export default function ListaFolios() {
     if (data.status === "noautorizado") {
       if (window.confirm("Desea autorizar el folio: " + data.folio + "?")) {
         update(ref(db, 'Folio/' + data.key), {
-          status: 'autorizado'
+          status: 'autorizado',
+          historial: data.historial + ' -> Autorizado por: ' + nombreUsuario,
         }).catch(error => {
           alert("Error al actualizar estado de folio." + error)
         })
@@ -110,45 +116,53 @@ export default function ListaFolios() {
     }
   }
 
-  function obtenerPermisoUsuario() {
+  function getFolios() {
     const userRef = ref(db, '/Usuario/' + auth.currentUser.uid)
     onValue(userRef, (snapshot) => {
       const data = snapshot.val();
       setUserPermiso(data.permisos)
-    });
 
-  }
+      let foliosRef = null;
+      if (data.permisos === 'vendedor') {
+        foliosRef = query(ref(db, 'Folio'), orderByChild('vendedor/nombre'), equalTo(data.nombre), limitToLast(100));
+      } else {
+        foliosRef = query(ref(db, 'Folio'), limitToLast(numeroRegistros), orderByKey());
+      }
 
-  function getFolios() {
-    onValue(foliosRef, (snapshot) => {
-      let list = []
-      snapshot.forEach((childSnapshot) => {
-        var key = childSnapshot.key;
-        var data = childSnapshot.val();
-        list.push({
-          key: key,
-          fecha: data.fecha,
-          folio: data.folio,
-          vendedor: data.vendedor.nombre === undefined ? data.vendedor : data.vendedor.nombre,
-          cliente: data.razon,
-          ruta: data.ruta,
-          total: data.total,
-          rfc: data.rfc,
-          domicilio: data.domicilio,
-          estado: data.estado,
-          email: data.email,
-          status: data.status,
-          ciudad: data.ciudad,
-          telefono: data.telefono,
-          observaciones: data.observaciones,
-          codigoCliente: data.codigoCliente,
-          tipoDocumento: data.tipoDocumento,
-          productos: data.listaDeProductos.sort((a, b) => a.marca > b.marca ? 1 : -1),
+      onValue(foliosRef, (snapshot) => {
+        let list = []
+        snapshot.forEach((childSnapshot) => {
+          var key = childSnapshot.key;
+          var data = childSnapshot.val();
+          list.push({
+            key: key,
+            fecha: data.fecha,
+            folio: data.folio,
+            vendedor: data.vendedor.nombre === undefined ? data.vendedor : data.vendedor.nombre,
+            cliente: data.razon,
+            ruta: data.ruta,
+            total: data.total,
+            rfc: data.rfc,
+            domicilio: data.domicilio,
+            estado: data.estado,
+            email: data.email,
+            status: data.status,
+            ciudad: data.ciudad,
+            historial: data.historial,
+            telefono: data.telefono,
+            observaciones: data.observaciones,
+            codigoCliente: data.codigoCliente,
+            tipoDocumento: data.tipoDocumento,
+            productos: data.listaDeProductos.sort((a, b) => a.marca > b.marca ? 1 : -1),
+          });
         });
+        setListaFolios(list.reverse());
+        setIsLoading(false);
       });
-      setListaFolios(list.reverse());
-      setIsLoading(false);
+
     });
+
+
   }
 
   const csvOptionsFolios = {
@@ -159,7 +173,7 @@ export default function ListaFolios() {
     useBom: true,
     useKeysAsHeaders: false,
     filename: 'Folios',
-    headers: ['Fecha', 'Folio', 'Codigo Cliente', 'Cliente', 'Importe', 'Agente', 'Ruta', 'Ciudad', 'Observaciones'],
+    headers: ['Fecha', 'Folio', 'Codigo Cliente', 'Cliente', 'Importe sin iva', 'Agente', 'Ruta', 'Ciudad', 'Observaciones'],
   };
 
   const csvOptionsProductos = {
@@ -224,21 +238,28 @@ export default function ListaFolios() {
     return null
   }
 
-  const disabledButton = (status) => {
-    if (userPermiso === 'superusuario') {
-      return status === 'noautorizado' ? true : false
-    } else {
-      return false;
-    }
+  const obtenerTextoAutorizado = (texto) => {
+    let position1 = texto.search("Autorizado por");
+    texto = texto.substring(position1);
+    let position2 = texto.search("->") > 0 ? texto.search("->") : texto.length;
+    texto = texto.substring(0, position2);
+    return texto;
   }
 
   const generarPdf = (folio, formato) => {
     setMarcaDeAgua(formato === 'generico' ? 'DOCUMENTO NO VALIDO' : '');
     setTextoConIva(folio.tipoDocumento === 'factura' ? '(SIN IVA)' : '');
+    setFirmaElectronica(formato === 'original' ? obtenerTextoAutorizado(folio.historial) : '');
     setDataPdf(folio)
     setTimeout(() => {
       handlePrint()
-      update(ref(db,'Folio/'+folio.key),{status:'impreso'})
+      if (formato === 'original' && folio.status === 'autorizado') {
+        update(ref(db, 'Folio/' + folio.key),
+          {
+            status: 'impreso',
+            historial: folio.historial + ' -> Impreso por: ' + nombreUsuario,
+          })
+      }
     }, 10);
   }
 
@@ -254,6 +275,26 @@ export default function ListaFolios() {
   function currencyFormat(num) {
     return '$' + parseFloat(num).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
   }
+
+  const style = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+  };
+
+  const [open, setOpen] = useState(false);
+  const [historial, setHistorial] = useState('');
+  const handleOpen = (historial) => {
+    setOpen(true);
+    setHistorial(historial)
+  }
+  const handleClose = () => setOpen(false);
 
   return (
     <>
@@ -291,56 +332,76 @@ export default function ListaFolios() {
           )}
           renderRowActions={({ row }) => (
             <Box>
-              <IconButton disabled={disabledButton(row.original.status)} onClick={() => { generarPdf(row.original, 'generico') }}>
-                <PictureAsPdfIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'primary'} />
+              <IconButton onClick={() => { generarPdf(row.original, 'generico') }}>
+                <PictureAsPdfIcon color='primary' />
               </IconButton>
               <IconButton onClick={() => handleExportRows([row])}>
                 <TextSnippetIcon color="success" />
               </IconButton>
-              <IconButton disabled={(row.original.status === 'noautorizado' || row.original.status === 'impreso') ? (userPermiso === 'superusuario' ? false : true) : false} onClick={() => { generarPdf(row.original, 'original') }}>
+              <IconButton disabled={(row.original.status === 'noautorizado' || row.original.status === 'impreso') ? (userPermiso === 'superusuario' && row.original.status != 'noautorizado' ? false : true) : false} onClick={() => { generarPdf(row.original, 'original') }}>
                 <LocalPrintshopIcon color={row.original.status === 'impreso' ? 'primary' : 'disabled'} />
               </IconButton>
               <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => autorizar(row.original)}>
                 <VerifiedIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'success'} />
               </IconButton>
-              <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleDelete(row.original.key, row.original.folio)}>
-                <DeleteForeverIcon color='error'/>
-              </IconButton>
+              {
+                userPermiso === 'superusuario'
+                  ?
+                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleDelete(row.original.key, row.original.folio)}>
+                    <DeleteForeverIcon color='error' />
+                  </IconButton>
+                  : ''
+              }
+              {
+                userPermiso === 'superusuario'
+                  ?
+                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleOpen(row.original.historial)}>
+                    <InfoIcon color="info" />
+                  </IconButton>
+                  : ''
+              }
+
             </Box>
           )}
           renderDetailPanel={({ row }) => (
-            <Box
-              sx={{
-                display: 'grid',
-                margin: 'auto',
-                gridTemplateColumns: '1fr 1fr',
-                width: '100%',
-                marginLeft: '200px'
-              }}
-            >
-              <table>
-                <thead>
-                  <tr>
-                    <th>Codigo</th>
-                    <th>Cantidad</th>
-                    <th>Marca</th>
-                    <th>Nombre</th>
-                    <th>Precio</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {row.original.productos.map((pro, index) => (
-                    <tr key={index}>
-                      <td>{pro.code}</td>
-                      <td>{pro.cantidad}</td>
-                      <td>{pro.marca}</td>
-                      <td>{pro.nombre}</td>
-                      <td>{pro.precio}</td>
+            <>
+              <Box
+                sx={{
+                  display: 'grid',
+                  margin: 'auto',
+                  gridTemplateColumns: '1fr 1fr',
+                  width: '100%',
+                  marginLeft: '200px'
+                }}
+              >
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Codigo</th>
+                      <th>Cantidad</th>
+                      <th>Marca</th>
+                      <th>Nombre</th>
+                      <th>Precio</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Box>
+                  </thead>
+                  <tbody>
+                    {row.original.productos.map((pro, index) => (
+                      <tr key={index}>
+                        <td>{pro.code}</td>
+                        <td>{pro.cantidad}</td>
+                        <td>{pro.marca}</td>
+                        <td>{pro.nombre}</td>
+                        <td>{pro.precio}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+              </Box>
+              <Box style={{display:'grid', marginLeft:'200px'}}>
+                <strong style={{ marginTop: '30px' }}>OBSERVACIONES: {row.original.observaciones}</strong>
+              </Box>
+            </>
           )}
         />
       </div>
@@ -436,8 +497,27 @@ export default function ListaFolios() {
           </table>
           <p>Total: {currencyFormat(dataPdf.total)}</p>
           <p>Observaciones: {dataPdf.observaciones}</p>
+          <p className="firmaElectronica">{firmaElectronica}</p>
         </div>
       }
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Historial
+          </Typography>
+          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+            {historial}
+          </Typography>
+        </Box>
+      </Modal>
+
     </>
+
   );
 }

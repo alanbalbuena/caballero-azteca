@@ -35,7 +35,7 @@ export default function Usuarios() {
   useEffect(() => {
     getUsuarios();
     // addUsuario();
-  })
+  },[])
 
   onChildChanged(usuariosRef, () => {
     getUsuarios();
