@@ -26,7 +26,7 @@ export default function ListaFolios(prop) {
   const [marcaDeAgua, setMarcaDeAgua] = useState('');
   const [textoConIva, setTextoConIva] = useState('');
   const [firmaElectronica, setFirmaElectronica] = useState('');
-  const numeroRegistros = 300;
+  const numeroRegistros = 5;
   //const foliosRef = query(ref(db, 'Folio'), limitToLast(3), orderByKey());
 
   useEffect(() => {

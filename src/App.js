@@ -9,6 +9,7 @@ import { Route, Routes } from "react-router-dom";
 import NavBar from "./components/NavBar";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./util/firebase";
+import Cobranza from "./components/Cobranza";
 
 export default function App() {
 
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/ejemplo" element={<Example />} />
+          <Route path="/cobranza" element={<Cobranza />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </>

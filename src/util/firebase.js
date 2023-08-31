@@ -3,7 +3,7 @@ import { getDatabase, } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-const entornoPruduccion = true;
+const entornoPruduccion = false;
 
 const firebaseConfigTest = {
   apiKey: "AIzaSyD5ceEqOwx_vgWHhuuAhrAk8nQ6fbVYIGM",

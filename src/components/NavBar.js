@@ -67,6 +67,12 @@ function NavBar() {
                 <Link className="nav-link" to="/clientes">Clientes</Link>
               </li>
             }
+            {
+              permisos === "superusuario" &&
+              <li className="nav-item">
+                <Link className="nav-link" to="/cobranza">Cobranza</Link>
+              </li>
+            }
             {/* <li className="nav-item">
               <Link className="nav-link" to="/ejemplo">Ejemplo</Link>
             </li> */}
