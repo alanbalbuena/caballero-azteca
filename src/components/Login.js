@@ -3,6 +3,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../util/firebase";
+import { Col, Button, Row, Container, Card, Form } from "react-bootstrap";
+import logo from '../logo-caballero-azteca.jpg';
 
 export function Login() {
 
@@ -18,8 +20,7 @@ export function Login() {
     }
     if (user) {
       navigate("/folios");
-     
-    } 
+    }
   });
 
   const logInWithEmailAndPassword = async (event, email, password) => {
@@ -33,49 +34,39 @@ export function Login() {
   };
 
   return (
-    <div className="mt-8">
-      <h1 className="text-3xl mb-2 text-center font-bold">CABALLERO AZTECA VENTAS ADMINISTRADOR</h1>
-      <div
-        style={{
-          background: `url('https://firebasestorage.googleapis.com/v0/b/caballero-azteca-ventas.appspot.com/o/src%2Flogo.png?alt=media&token=9db8fc2e-3896-4646-9c15-ef9508763e4b')  no-repeat center center`,
-          backgroundSize: "fit",
-          height: "100px",
-          width: "300px"
-        }}
-        className="text-center mx-auto"
-      ></div>
-
-      <div className="border border-dark mx-auto w-11/12 md:w-2/4 rounded py-8 px-4 md:px-8">
-        <form className="">
-          <label htmlFor="userEmail" className="block">
-            Email:
-          </label>
-          <input
-            type="email"
-            className="my-1 p-1 w-full"
-            name="userEmail"
-            value={email}
-            placeholder="E.g: usuario@caballeroazteca.com"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <label htmlFor="userPassword" className="block">
-            Password:
-          </label>
-          <input
-            type="password"
-            className="mt-1 mb-3 p-1 w-full"
-            name="userPassword"
-            value={password}
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button className="bg-green-400 hover:bg-green-500 w-full py-2 text-white"
-            onClick={(event) => { logInWithEmailAndPassword(event, email, password) }}>
-            Loguearse
-          </button>
-        </form>
-      </div>
-    </div>
+    <>
+      <Container>
+        <Row className="vh-100 d-flex justify-content-center align-items-center">
+          <Col md={8} lg={6} xs={12}>
+            <div className="border border-3 border-primary"></div>
+            <Card className="shadow">
+              <Card.Body>
+                <div className="mb-3 mt-md-4">
+                  <div className="text-center">
+                    <img style={{ width: '150px' }} src={logo} alt="logo"></img>
+                  </div>
+                  <div className="mb-3">
+                    <Form>
+                      <Form.Group className="mb-3" controlId="formBasicEmail">
+                        <Form.Label className="text-center" >Email address</Form.Label>
+                        <Form.Control type="email" value={email} placeholder="E.g: usuario@caballeroazteca.com" onChange={(e) => setEmail(e.target.value)} />
+                      </Form.Group>
+                      <Form.Group className="mb-3" controlId="formBasicPassword">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control type="password" value={password} placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+                      </Form.Group>
+                      <div className="d-grid">
+                        <Button variant="primary" type="submit" onClick={(event) => { logInWithEmailAndPassword(event, email, password) }}>Login</Button>
+                      </div>
+                    </Form>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </>
   );
 }
 export default Login;

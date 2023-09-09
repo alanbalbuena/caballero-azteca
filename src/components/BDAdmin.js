@@ -51,7 +51,7 @@ export default function BDAdmin() {
           let list = [];
           rowObject.forEach((row) => {
             list.push({
-              fechaEmision: row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568)*86400*1000)).format('DD/MM/YYYY') : '',
+              fechaEmision: row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
               factura: row.hasOwnProperty('factura') ? row.factura : '',
               notaCredito: row.hasOwnProperty('notaCredito') ? row.notaCredito : '',
               codigoCliente: row.hasOwnProperty('codigoCliente') ? row.codigoCliente : '',
@@ -86,22 +86,43 @@ export default function BDAdmin() {
   }
 
   return (
-    <div>
-      <div className="mt-8">
-        <div className="border border-dark mx-auto w-11/12 md:w-2/4 rounded py-8 px-4 md:px-8">
-          <label className="block">Productos:</label>
-          <input type="file" className="mt-1 mb-3 p-1 w-1/2" onChange={handleChangeProductos} ref={refProductos} />
-          <button className="bg-green-400 hover:bg-green-500 w-1/2 py-2 text-white" onClick={() => handleSubmit('productos')}>SUBIR PRODUCTOS</button>
-          <label className="block">Clientes:</label>
-          <input type="file" className="mt-1 mb-3 p-1 w-1/2" onChange={handleChangeClientes} ref={refClientes} />
-          <button className="bg-green-400 hover:bg-green-500 w-1/2 py-2 text-white" onClick={() => handleSubmit('clientes')}>SUBIR CLIENTES</button>
-          <label className="block">Cobranza:</label>
-          <input type="file" className="mt-1 mb-3 p-1 w-1/2" onChange={handleChangeCobranza} ref={refCobranza} />
-          <button className="bg-green-400 hover:bg-green-500 w-1/2 py-2 text-white" onClick={() => handleSubmit('cobranza')}>SUBIR COBRANZA</button>
-          <button className="bg-blue-400 hover:bg-blue-500 w-full py-2 text-white" onClick={() => reset()}>LIMPIAR</button>
-
+    <>
+      <div className='container ' style={{marginTop:'20px'}}>
+        <div className="card shadow">
+          <div className="card-header">Subir Base de datos</div>
+          <div className="card-body">
+            <div className="mb-3 row">
+              <label className="form-label">Productos</label>
+              <div className='col-6'>
+                <input className="form-control" type="file" onChange={handleChangeProductos} ref={refProductos} />
+              </div>
+              <div className='col-2'>
+                <button className='form-control btn btn-success' onClick={() => handleSubmit('productos')}>Subir Productos</button>
+              </div>
+            </div>
+            <div className="mb-3 row">
+              <label className="form-label">Clientes</label>
+              <div className='col-6'>
+                <input className="form-control" type="file" onChange={handleChangeClientes} ref={refClientes} />
+              </div>
+              <div className='col-2'>
+                <button className='form-control btn btn-success' onClick={() => handleSubmit('Clientes')}>Subir Clientes</button>
+              </div>
+            </div>
+            <div className="mb-3 row">
+              <label className="form-label">Cobranza</label>
+              <div className='col-6'>
+                <input className="form-control" type="file" onChange={handleChangeCobranza} ref={refCobranza} />
+              </div>
+              <div className='col-2'>
+                <button className='form-control btn btn-success' onClick={() => handleSubmit('cobranza')}>Subir Cobranza</button>
+              </div>
+            </div>
+            <br/>
+            <button className="col-2 btn btn-primary" onClick={() => reset()}>LIMPIAR</button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

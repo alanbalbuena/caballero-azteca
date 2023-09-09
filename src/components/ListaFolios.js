@@ -26,7 +26,7 @@ export default function ListaFolios(prop) {
   const [marcaDeAgua, setMarcaDeAgua] = useState('');
   const [textoConIva, setTextoConIva] = useState('');
   const [firmaElectronica, setFirmaElectronica] = useState('');
-  const numeroRegistros = 5;
+  const numeroRegistros =50;
   //const foliosRef = query(ref(db, 'Folio'), limitToLast(3), orderByKey());
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function ListaFolios(prop) {
   );
 
   const handleDelete = async (key, id) => {
-    if (window.confirm("Desea eliminar el folio " + id)) {
+    if (window.confirm("***ALERTA!!! ESTAS A PUNTO DE ELIMINAR EL SIGUIENTE FOLIO " + id)) {
       remove(ref(db, 'Folio/' + key))
         .then(
           console.log("Registro eliminado correctamente")
@@ -202,8 +202,8 @@ export default function ListaFolios(prop) {
           code: p.code,
           marca: p.marca,
           nombre: p.nombre,
-          precio: f.original.tipoDocumento === 'factura' ? p.precio : (p.precio / 1.16).toFixed(2),
-          subTotal: f.original.tipoDocumento === 'factura' ? p.precio * p.cantidad : ((p.precio / 1.16) * p.cantidad).toFixed(2),
+          precio: f.original.tipoDocumento === 'Factura' ? p.precio : (p.precio / 1.16).toFixed(2),
+          subTotal: f.original.tipoDocumento === 'Factura' ? p.precio * p.cantidad : ((p.precio / 1.16) * p.cantidad).toFixed(2),
           tipoDocumento: f.original.tipoDocumento,
           fecha: f.original.fecha,
           vendedor: f.original.vendedor,
@@ -222,7 +222,7 @@ export default function ListaFolios(prop) {
         folio: f.original.folio,
         codigoCliente: f.original.codigoCliente,
         cliente: f.original.cliente,
-        total: f.original.tipoDocumento === 'factura' ? f.original.total : (f.original.total / 1.16).toFixed(2),
+        total: f.original.tipoDocumento === 'Factura' ? f.original.total : (f.original.total / 1.16).toFixed(2),
         vendedor: f.original.vendedor,
         ruta: f.original.ruta,
         ciudad: f.original.ciudad,
@@ -248,7 +248,7 @@ export default function ListaFolios(prop) {
 
   const generarPdf = (folio, formato) => {
     setMarcaDeAgua(formato === 'generico' ? 'DOCUMENTO NO VALIDO' : '');
-    setTextoConIva(folio.tipoDocumento === 'factura' ? '(SIN IVA)' : '');
+    setTextoConIva(folio.tipoDocumento === 'Factura' ? '(SIN IVA)' : '');
     setFirmaElectronica(formato === 'original' ? obtenerTextoAutorizado(folio.historial) : '');
     setDataPdf(folio)
     setTimeout(() => {
@@ -347,16 +347,16 @@ export default function ListaFolios(prop) {
               {
                 userPermiso === 'superusuario'
                   ?
-                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleDelete(row.original.key, row.original.folio)}>
-                    <DeleteForeverIcon color='error' />
+                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleOpen(row.original.historial)}>
+                    <InfoIcon color="info" />
                   </IconButton>
                   : ''
               }
               {
                 userPermiso === 'superusuario'
                   ?
-                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleOpen(row.original.historial)}>
-                    <InfoIcon color="info" />
+                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleDelete(row.original.key, row.original.folio)}>
+                    <DeleteForeverIcon color='error' />
                   </IconButton>
                   : ''
               }
@@ -412,10 +412,10 @@ export default function ListaFolios(prop) {
         :
         <div className='containerPDF' ref={componentRef}>
 
-          <div className='header'>
+          <div className='cabecera'>
             <img className='logo' src={logo} alt='logo' />
             <div className='titulo'>
-              <h3>DISTRIBUIDORA FERRETERA CABALLERO AZTECA, S. A. DE C. V.</h3>
+              <h5>DISTRIBUIDORA FERRETERA CABALLERO AZTECA, S. A. DE C. V.</h5>
               <p>JOSEMARIACOSS #1278-A</p>
               <p>TEL. 38 23 76 32; FAX. 38 54 36 97</p>
               <p>GUADALAJARA, JALISCO</p>
@@ -449,9 +449,9 @@ export default function ListaFolios(prop) {
             <tbody>
               <tr>
                 <td style={{ width: '10%' }}>CODIGO:</td>
-                <td style={{ width: '40%' }}>{dataPdf.codigoCliente}</td>
+                <td style={{ width: '20%' }}>{dataPdf.codigoCliente}</td>
                 <td style={{ width: '10%' }}>RAZON:</td>
-                <td style={{ width: '40%' }}>{dataPdf.cliente}</td>
+                <td style={{ width: '60%' }}>{dataPdf.cliente}</td>
               </tr>
               <tr>
                 <td>RFC:</td>

@@ -1,134 +1,143 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { onValue, ref } from "firebase/database";
 import { db } from "../util/firebase";
-import { Box, Button } from '@mui/material';
-import { ExportToCsv } from 'export-to-csv';
-import { MaterialReactTable } from "material-react-table";
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import Button from 'react-bootstrap/Button';
+
+import '../App.css';
 
 export default function Cobranza() {
     const [cobranza, setCobranza] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const columns = useMemo(
-        () => [
-            {
-                accessorKey: "key",
-                header: "Key",
-
-            },
-            {
-                accessorKey: "fechaEmision",
-                header: "Fecha Emision",
-                size: 10,
-            },
-            {
-                accessorKey: "factura",
-                header: "Factura",
-                size: 10,
-            },
-            {
-                accessorKey: "notaCredito",
-                header: "N.C.",
-                size: 10,
-            },
-            {
-                accessorKey: "codigoCliente",
-                header: "Codigo Cliente",
-                size: 10,
-            },
-            {
-                accessorKey: "nombreCliente",
-                header: "Nombre Cliente",
-                size: 10,
-            },
-            {
-                accessorKey: "importeFactura",
-                header: "$ Factura",
-                size: 10,
-            },
-            {
-                accessorKey: "importeNotaCredito",
-                header: "$ Credito",
-                size: 10,
-            },
-            {
-                accessorKey: "importePorPagar",
-                header: "$ por Pagar",
-                size: 10,
-            },
-            {
-                accessorKey: "abono",
-                header: "Abono",
-                size: 10,
-            },
-            {
-                accessorKey: "saldo",
-                header: "Saldo",
-                size: 10,
-            },
-            {
-                accessorKey: "efectivo",
-                header: "Efectivo",
-                size: 10,
-            },
-            {
-                accessorKey: "otros",
-                header: "Otros",
-                size: 10,
-            },
-            {
-                accessorKey: "observaciones",
-                header: "Obervaciones",
-                size: 10,
-            },
-            {
-                accessorKey: "vencidas",
-                header: "Vencidas",
-                size: 10,
-            },
-            {
-                accessorKey: "agente",
-                header: "Agente",
-                size: 10,
-            },
-            {
-                accessorKey: "ruta",
-                header: "Ruta",
-                size: 10,
-            },
-
-
-        ],
-        []
-    );
-
-    useEffect(() => {
+    /* useEffect(() => {
         onValue(ref(db, 'Cobranza'), (snapshot) => {
             setCobranza(snapshot.val())
             setIsLoading(true);
         })
-    }, []);
-
-
-    const csvOptionsCobranza = {
-        fieldSeparator: ',',
-        quoteStrings: '"',
-        decimalSeparator: '.',
-        showLabels: true,
-        useBom: true,
-        useKeysAsHeaders: false,
-        filename: 'Cobranza',
-        headers: ['fechaEmision', 'factura', 'notaCredito', 'codigoCliente', 'nombreCliente', 'importeFactura', 'importeNotaCredito', 'importePorPagar', 'abono', 'saldo', 'efectivo', 'otros', 'observaciones', 'vencidas', 'agente', 'ruta'],
-    };
-
-    const csvExporterCobranza = new ExportToCsv(csvOptionsCobranza);
-    const handleExportRows = (rows) => csvExporterCobranza.generateCsv(rows);
+    }, []); */
 
     return (
         <>
-            <div>Cobranza</div>
-            
+            <div className='container' style={{marginTop:'20px'}}>
+                <div className="card shadow">
+                    <div className="card-header">Cobranza</div>
+                    <div className="card-body">
+                        <div class="col-3 mb-3">
+                            <label for="inputState" class="form-label">Agente</label>
+                            <select id="inputState" class="form-select">
+                                <option selected>Choose...</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                            </select>
+                        </div>
+                        <div class="col-3 mb-3">
+                            <label for="inputState" class="form-label">Ruta</label>
+                            <select id="inputState" class="form-select">
+                                <option selected>Choose...</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                            </select>
+                        </div>
+                        <div class="col-3 mb-3">
+                            <label for="inputState" class="form-label">Fecha</label>
+                            <select id="inputState" class="form-select">
+                                <option selected>Choose...</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className='container'>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Fecha Emision</th>
+                                    <th scope="col">Factura</th>
+                                    <th scope="col">N.C.</th>
+                                    <th scope="col">Codigo Cliente</th>
+                                    <th scope="col">Nombre Cliente</th>
+                                    <th scope="col">$ Factura</th>
+                                    <th scope="col">$ N.C.</th>
+                                    <th scope="col">$ Por Pagar</th>
+                                    <th scope="col">Abono</th>
+                                    <th scope="col">Saldo</th>
+                                    <th scope="col">Efectivo</th>
+                                    <th scope="col">Otros</th>
+                                    <th scope="col">Obervaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>13/06/2023</td>
+                                    <td>K-18442</td>
+                                    <td></td>
+                                    <td>C2380</td>
+                                    <td>ALEJANDRO PEREZ GUERRERO</td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Zapopan</td>
+                                </tr>
+                                <tr>
+                                    <td>13/06/2023</td>
+                                    <td>K-18442</td>
+                                    <td></td>
+                                    <td>C2380</td>
+                                    <td>ALEJANDRO PEREZ GUERRERO</td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Zapopan</td>
+                                </tr>
+                                <tr>
+                                    <td>13/06/2023</td>
+                                    <td>K-18442</td>
+                                    <td></td>
+                                    <td>C2380</td>
+                                    <td>ALEJANDRO PEREZ GUERRERO</td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Zapopan</td>
+                                </tr>
+                                <tr>
+                                    <td>13/06/2023</td>
+                                    <td>K-18442</td>
+                                    <td></td>
+                                    <td>C2380</td>
+                                    <td>ALEJANDRO PEREZ GUERRERO</td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td>$5,262.49</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Zapopan</td>
+                                </tr>
+                                
+                               
+                               
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </>
     )
 }

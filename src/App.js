@@ -10,6 +10,7 @@ import NavBar from "./components/NavBar";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./util/firebase";
 import Cobranza from "./components/Cobranza";
+import ReporteVentas from "./components/ReporteVentas";
 
 export default function App() {
 
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/ejemplo" element={<Example />} />
           <Route path="/cobranza" element={<Cobranza />} />
+          <Route path="/reporteVentas" element={<ReporteVentas />} />
           <Route path="/" element={<Login />} />
         </Routes>
       </>
