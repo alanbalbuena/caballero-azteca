@@ -1,4 +1,4 @@
-import React ,{ useState, useEffect }from "react";
+import React, { useState, useEffect } from "react";
 import BDAdmin from "./components/BDAdmin";
 import Usuarios from "./components/Usuarios";
 import ListaFolios from "./components//ListaFolios";
@@ -8,32 +8,36 @@ import Login from "./components/Login";
 import { Route, Routes } from "react-router-dom";
 import NavBar from "./components/NavBar";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./util/firebase";
+import { auth, db } from "./util/firebase";
 import Cobranza from "./components/Cobranza";
 import ReporteVentas from "./components/ReporteVentas";
+import { onValue, ref } from "firebase/database";
 
 export default function App() {
 
-  const [banera, setBandera] = useState(false);
-  const [nombreUsuario, setNombreUsuario] = useState();
+  const [banera, setBandera] = useState(false)
+  const [nombreUsuario, setNombreUsuario] = useState()
+  const [permisos, setPermisos] = useState()
 
-  useEffect(() => {
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        setBandera(true);
-        setNombreUsuario(user.displayName);
-        
-      }
-    }).bind(this);
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      setBandera(true);
+      setNombreUsuario(user.displayName);
 
-  }, [])
+      let userRef = ref(db, '/Usuario/' + auth.currentUser.uid)
+      onValue(userRef, (snapshot) => {
+        let data = snapshot.val();
+        setPermisos(data.permisos);
+      });
+    }
+  }).bind(this);
 
   return (
     banera ?
       <>
-        <NavBar />
+        <NavBar permisos={permisos}/>
         <Routes>
-          <Route path="/folios" element={<ListaFolios nombre = {nombreUsuario}/>} />
+          <Route path="/folios" element={<ListaFolios nombre={nombreUsuario} />} />
           <Route path="/adminbd" element={<BDAdmin />} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/clientes" element={<Clientes />} />

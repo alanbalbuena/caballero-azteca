@@ -152,10 +152,6 @@ export default function ReporteVentas() {
             setListVentas(jsonVentas)
         });
 
-
-
-
-
          /* dataFoliosjson.forEach((data) => {
             let folioMes = data.fecha.substring(3, 5)
             let ano = data.fecha.substring(6, 10)

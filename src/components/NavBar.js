@@ -5,27 +5,7 @@ import { onAuthStateChanged, signOut, getAuth } from "firebase/auth";
 import { db, auth } from '../util/firebase';
 import logo from '../logo-caballero-azteca.jpg';
 
-function NavBar() {
-  const navigate = useNavigate();
-  const [permisos, setPermisos] = useState()
-
-  useEffect(() => {
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        let userRef = ref(db, '/Usuario/' + auth.currentUser.uid)
-        onValue(userRef, (snapshot) => {
-          let data = snapshot.val();
-          setPermisos(data.permisos);
-        }, {
-          onlyOnce: true
-        });
-      } else {
-        navigate('/');
-      }
-    }).bind(this);
-
-  })
-
+function NavBar(prop) {
 
   function close() {
     signOut(getAuth()).then(() => {
@@ -44,7 +24,7 @@ function NavBar() {
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <Link className="nav-link" to="/folios">Folios</Link>
               {
-                permisos === 'superusuario'
+                prop.permisos === 'superusuario'
                   ? <>
                     <Link className="nav-link" to="/adminbd">Base de datos</Link>
                     <Link className="nav-link" to="/usuarios">Usarios</Link>
@@ -55,7 +35,7 @@ function NavBar() {
                   : ''
               }
             </ul>
-            <button className='btn btn-danger' onClick={() => { close() }}>Cerrar sesion</button> 
+            <button className='btn btn-danger' onClick={() => { close() }}>Cerrar sesion</button>
           </div>
         </div>
       </nav>

@@ -20,7 +20,7 @@ export default function BDAdmin() {
     refClientes.current.value = '';
     refCobranza.current.value = '';
   }
-  function handleSubmit(tipo) {
+  const handleSubmit = (tipo) => {
     let objRef;
     if (fileProductos != null && tipo === 'productos') {
       objRef = ref(db, 'Producto')
@@ -53,18 +53,21 @@ export default function BDAdmin() {
             list.push({
               fechaEmision: row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
               factura: row.hasOwnProperty('factura') ? row.factura : '',
-              notaCredito: row.hasOwnProperty('notaCredito') ? row.notaCredito : '',
+              notaCredito: row.hasOwnProperty('notaCredito') ? row.notaCredito !== 0 ? row.notaCredito : 0 : 0,
               codigoCliente: row.hasOwnProperty('codigoCliente') ? row.codigoCliente : '',
               nombreCliente: row.hasOwnProperty('nombreCliente') ? row.nombreCliente : '',
-              importeFactura: row.hasOwnProperty('importeFactura') ? row.importeFactura : '',
-              importeNotaCredito: row.hasOwnProperty('importeNotaCredito') ? row.importeNotaCredito : '',
-              importePorPagar: row.hasOwnProperty('importePorPagar') ? row.importePorPagar : '',
-              abono: row.hasOwnProperty('abono') ? row.abono : '',
-              saldo: row.hasOwnProperty('saldo') ? row.saldo : '',
-              efectivo: row.hasOwnProperty('efectivo') ? row.efectivo : '',
-              otros: row.hasOwnProperty('otros') ? row.otros : '',
+              importeFactura: row.hasOwnProperty('importeFactura') ? row.importeFactura !== '' ? row.importeFactura : 0 : 0,
+              importeNotaCredito: row.hasOwnProperty('importeNotaCredito') ? row.importeNotaCredito !== '' ? row.importeNotaCredito : 0 : 0,
+              importePorPagar: row.hasOwnProperty('importePorPagar') ? row.importePorPagar !== '' ? row.importePorPagar : 0 : 0,
+              abono: row.hasOwnProperty('abono') ? row.abono !== '' ? row.abono : 0 : 0,
+              saldo: row.hasOwnProperty('saldo') ? row.saldo !== '' ? row.saldo : 0 : 0,
+              pago: row.hasOwnProperty('pago') ? row.pago !== '' ? row.pago : 0 : 0,
               observaciones: row.hasOwnProperty('observaciones') ? row.observaciones : '',
-              vencidas: row.hasOwnProperty('vencidas') ? row.vencidas : '',
+              metodoPago: row.hasOwnProperty('metodoPago') ? row.metodoPago : '',
+              banco: row.hasOwnProperty('banco') ? row.banco : '',
+              fechaPago: row.hasOwnProperty('fechaPago') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
+              numeroCheque: row.hasOwnProperty('numeroCheque') ? row.numeroCheque !== '' ? row.numeroCheque : 0 : 0,
+              vencidas: row.hasOwnProperty('vencidas') ? row.vencidas === 'SI' ? true : false : '',
               agente: row.hasOwnProperty('agente') ? row.agente : '',
               ruta: row.hasOwnProperty('ruta') ? row.ruta : '',
             })
@@ -87,7 +90,7 @@ export default function BDAdmin() {
 
   return (
     <>
-      <div className='container ' style={{marginTop:'20px'}}>
+      <div className='container ' style={{ marginTop: '20px' }}>
         <div className="card shadow">
           <div className="card-header">Subir Base de datos</div>
           <div className="card-body">
@@ -118,7 +121,7 @@ export default function BDAdmin() {
                 <button className='form-control btn btn-success' onClick={() => handleSubmit('cobranza')}>Subir Cobranza</button>
               </div>
             </div>
-            <br/>
+            <br />
             <button className="col-2 btn btn-primary" onClick={() => reset()}>LIMPIAR</button>
           </div>
         </div>

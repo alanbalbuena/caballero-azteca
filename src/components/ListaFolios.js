@@ -26,7 +26,7 @@ export default function ListaFolios(prop) {
   const [marcaDeAgua, setMarcaDeAgua] = useState('');
   const [textoConIva, setTextoConIva] = useState('');
   const [firmaElectronica, setFirmaElectronica] = useState('');
-  const numeroRegistros =50;
+  const numeroRegistros =2;
   //const foliosRef = query(ref(db, 'Folio'), limitToLast(3), orderByKey());
 
   useEffect(() => {
@@ -161,8 +161,6 @@ export default function ListaFolios(prop) {
       });
 
     });
-
-
   }
 
   const csvOptionsFolios = {
