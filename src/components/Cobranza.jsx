@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { onValue, push, ref } from "firebase/database"
 import { db } from "../util/firebase"
 import dataCobranzaJson from './dataCobranza.json'
@@ -151,7 +151,7 @@ export default function Cobranza() {
 
     return (
         <>
-            <div className='container' style={{ marginTop: '20px' }}>
+            <div className='container mt-3'>
                 <div className="card shadow">
                     <div className="card-header">Cobranza</div>
                     <div className="card-body row">

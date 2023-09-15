@@ -1,5 +1,5 @@
-import { limitToLast, onValue, query, ref, equalTo, orderByChild } from 'firebase/database';
-import React, { useState, useEffect } from 'react'
+import { limitToLast, onValue, query, ref } from 'firebase/database';
+import React, { useState } from 'react'
 import { db } from '../util/firebase';
 import dataFolios from './dataFolios';
 import { ExportToCsv } from "export-to-csv";

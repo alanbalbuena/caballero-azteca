@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { ref, onValue, orderByChild, query, update, onChildChanged } from "firebase/database";
+import { ref, onValue, orderByChild, query, update } from "firebase/database";
 import { db } from '../util/firebase';
 import { MaterialReactTable } from "material-react-table";
 
@@ -44,10 +44,6 @@ export default function Clientes() {
         getClientes();
         // addCliente();
     },[])
-
-    onChildChanged(clientesRef, () => {
-        getClientes();
-    });
 
     const columns = useMemo(
         () => [

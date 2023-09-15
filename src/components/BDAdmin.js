@@ -20,6 +20,7 @@ export default function BDAdmin() {
     refClientes.current.value = '';
     refCobranza.current.value = '';
   }
+
   const handleSubmit = (tipo) => {
     let objRef;
     if (fileProductos != null && tipo === 'productos') {
@@ -51,25 +52,25 @@ export default function BDAdmin() {
           let list = [];
           rowObject.forEach((row) => {
             list.push({
-              fechaEmision: row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
-              factura: row.hasOwnProperty('factura') ? row.factura : '',
-              notaCredito: row.hasOwnProperty('notaCredito') ? row.notaCredito !== 0 ? row.notaCredito : 0 : 0,
-              codigoCliente: row.hasOwnProperty('codigoCliente') ? row.codigoCliente : '',
-              nombreCliente: row.hasOwnProperty('nombreCliente') ? row.nombreCliente : '',
-              importeFactura: row.hasOwnProperty('importeFactura') ? row.importeFactura !== '' ? row.importeFactura : 0 : 0,
+              fechaEmision:       row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
+              factura:            row.hasOwnProperty('factura') ? row.factura : '',
+              notaCredito:        row.hasOwnProperty('notaCredito') ? row.notaCredito : '',
+              codigoCliente:      row.hasOwnProperty('codigoCliente') ? row.codigoCliente : '',
+              nombreCliente:      row.hasOwnProperty('nombreCliente') ? row.nombreCliente : '',
+              importeFactura:     row.hasOwnProperty('importeFactura') ? row.importeFactura !== '' ? row.importeFactura : 0 : 0,
               importeNotaCredito: row.hasOwnProperty('importeNotaCredito') ? row.importeNotaCredito !== '' ? row.importeNotaCredito : 0 : 0,
-              importePorPagar: row.hasOwnProperty('importePorPagar') ? row.importePorPagar !== '' ? row.importePorPagar : 0 : 0,
-              abono: row.hasOwnProperty('abono') ? row.abono !== '' ? row.abono : 0 : 0,
-              saldo: row.hasOwnProperty('saldo') ? row.saldo !== '' ? row.saldo : 0 : 0,
-              pago: row.hasOwnProperty('pago') ? row.pago !== '' ? row.pago : 0 : 0,
-              observaciones: row.hasOwnProperty('observaciones') ? row.observaciones : '',
-              metodoPago: row.hasOwnProperty('metodoPago') ? row.metodoPago : '',
-              banco: row.hasOwnProperty('banco') ? row.banco : '',
-              fechaPago: row.hasOwnProperty('fechaPago') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
-              numeroCheque: row.hasOwnProperty('numeroCheque') ? row.numeroCheque !== '' ? row.numeroCheque : 0 : 0,
-              vencidas: row.hasOwnProperty('vencidas') ? row.vencidas === 'SI' ? true : false : '',
-              agente: row.hasOwnProperty('agente') ? row.agente : '',
-              ruta: row.hasOwnProperty('ruta') ? row.ruta : '',
+              importePorPagar:    row.hasOwnProperty('importePorPagar') ? row.importePorPagar !== '' ? row.importePorPagar : 0 : 0,
+              abono:              row.hasOwnProperty('abono') ? row.abono !== '' ? row.abono : 0 : 0,
+              saldo:              row.hasOwnProperty('saldo') ? row.saldo !== '' ? row.saldo : 0 : 0,
+              pago:               row.hasOwnProperty('pago') ? row.pago !== '' ? row.pago : 0 : 0,
+              observaciones:      row.hasOwnProperty('observaciones') ? row.observaciones : '',
+              metodoPago:         row.hasOwnProperty('metodoPago') ? row.metodoPago : '',
+              banco:              row.hasOwnProperty('banco') ? row.banco : '',
+              fechaPago:          row.hasOwnProperty('fechaPago') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
+              numeroCheque:       row.hasOwnProperty('numeroCheque') ? row.numeroCheque !== '' ? row.numeroCheque : 0 : 0,
+              vencidas:           row.hasOwnProperty('vencidas') ? row.vencidas === 'SI' ? true : false : '',
+              agente:             row.hasOwnProperty('agente') ? row.agente : '',
+              ruta:               row.hasOwnProperty('ruta') ? row.ruta : '',
             })
             json = JSON.parse(JSON.stringify(list))
           })
@@ -79,6 +80,7 @@ export default function BDAdmin() {
           set(objRef, json)
             .then(() => {
               alert("Base de datos   actualizada correctamente.")
+              reset()
             })
             .catch((error) => {
               alert("No se ha podido actualizar la base de datos. ERROR: " + error)

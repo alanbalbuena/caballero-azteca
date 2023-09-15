@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { useNavigate } from "react-router-dom";
 import { auth } from "../util/firebase";
 import { Col, Button, Row, Container, Card, Form } from "react-bootstrap";
 import logo from '../logo-caballero-azteca.jpg';
@@ -10,18 +8,6 @@ export function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [user, loading] = useAuthState(auth);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (loading) {
-      // maybe trigger a loading screen
-      return;
-    }
-    if (user) {
-      navigate("/folios");
-    }
-  });
 
   const logInWithEmailAndPassword = async (event, email, password) => {
     try {

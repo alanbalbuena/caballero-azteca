@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { ref, onValue, orderByChild, query, update, onChildChanged } from "firebase/database";
+import { ref, onValue, orderByChild, query, update } from "firebase/database";
 import { db } from '../util/firebase';
 import "bootstrap/dist/css/bootstrap.min.css";
 //import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa";
@@ -8,10 +8,13 @@ import { MaterialReactTable } from "material-react-table";
 export default function Usuarios() {
 
   const [listaUsuarios, setListaUsuarios] = useState([]);
+  const [showProgressBars, setShowProgressBars] = useState(false);
   const usuariosRef = query(ref(db, 'Usuario'), orderByChild('usuario'));
+  
 
   function getUsuarios() {
     onValue(usuariosRef, (snapshot) => {
+      setShowProgressBars(true)
       let list = []
       snapshot.forEach((childSnapshot) => {
         var key = childSnapshot.key;
@@ -27,19 +30,13 @@ export default function Usuarios() {
         });
       });
       setListaUsuarios(list);
-    }, {
-      onlyOnce: true
+      setShowProgressBars(false)
     });
   }
 
   useEffect(() => {
     getUsuarios();
-    // addUsuario();
   },[])
-
-  onChildChanged(usuariosRef, () => {
-    getUsuarios();
-  });
 
   const columns = useMemo(
     () => [
@@ -89,7 +86,6 @@ export default function Usuarios() {
   };
 
   return (
-
     <MaterialReactTable
       columns={columns}
       data={listaUsuarios}
@@ -101,11 +97,8 @@ export default function Usuarios() {
       enableEditing
       onEditingRowSave={handleSaveRow}
       enableTopToolbar={false} //hide top toolbar
-      state={{ showProgressBars: true }} //or showSkeletons
+      state={{ showProgressBars }} //or showSkeletons
       positionActionsColumn="last"
-
-
     />
-
   )
 }
