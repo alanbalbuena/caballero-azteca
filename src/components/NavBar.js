@@ -2,11 +2,14 @@ import React from 'react';
 import { Link } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
 import logo from '../logo-caballero-azteca.jpg';
+import { useNavigate } from "react-router-dom";
 
 function NavBar(prop) {
+  const navigate = useNavigate();
 
   function close() {
     signOut(getAuth()).then(() => {
+      navigate('/login')
       window.location.reload(false);
     }).catch((error) => {
       console.log("ocurrio el siguiente error al intentar cerrar sesion: " + error);
@@ -28,7 +31,7 @@ function NavBar(prop) {
                     <Link className="nav-link" to="/usuarios">Usarios</Link>
                     <Link className="nav-link" to="/clientes">Clientes</Link>
                     <Link className="nav-link" to="/cobranza">Cobranza</Link>
-                    <Link className="nav-link" to="/ejemplo">Ejemplo</Link>
+                    {/* <Link className="nav-link" to="/ejemplo">Ejemplo</Link> */}
                     <Link className="nav-link" to="/reporteVentas">Reporte de Ventas</Link>
                   </>
                   : ''

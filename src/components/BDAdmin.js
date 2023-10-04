@@ -43,34 +43,48 @@ export default function BDAdmin() {
         var json = '';
         if (tipo === 'clientes' || tipo === 'productos') {
           rowObject.forEach((row) => {
-            if (row.hasOwnProperty('code')) {
-              row.code = row.code.toString()
-            }
+
+            row.agenteCobro = row.hasOwnProperty('agenteCobro') ? row.agenteCobro.toString() : row.agenteCobro
+            row.agenteVenta = row.hasOwnProperty('agenteVenta') ? row.agenteVenta.toString() : row.agenteVenta
+            row.calle = row.hasOwnProperty('calle') ? row.calle.toString() : row.calle
+            row.code = row.hasOwnProperty('code') ? row.code.toString() : row.code
+            row.colonia = row.hasOwnProperty('colonia') ? row.colonia.toString() : row.colonia
+            row.cp = row.hasOwnProperty('cp') ? row.cp.toString() : row.cp
+            row.email = row.hasOwnProperty('email') ? row.email.toString() : row.email
+            row.estado = row.hasOwnProperty('estado') ? row.estado.toString() : row.estado
+            row.municipio = row.hasOwnProperty('municipio') ? row.municipio.toString() : row.municipio
+            row.numeroExterior = row.hasOwnProperty('numeroExterior') ? row.numeroExterior.toString() : row.numeroExterior
+            row.numeroInterior = row.hasOwnProperty('numeroInterior') ? row.numeroInterior.toString() : row.numeroInterior
+            row.razon = row.hasOwnProperty('razon') ? row.razon.toString() : row.razon
+            row.rfc = row.hasOwnProperty('rfc') ? row.rfc.toString() : row.rfc
+            row.ruta = row.hasOwnProperty('ruta') ? row.ruta.toString() : row.ruta
+            row.telefono = row.hasOwnProperty('telefono') ? row.telefono.toString() : row.telefono
+
           })
           json = JSON.parse(JSON.stringify(rowObject))
         } else if (tipo === 'cobranza') {
           let list = [];
           rowObject.forEach((row) => {
             list.push({
-              fechaEmision:       row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
-              factura:            row.hasOwnProperty('factura') ? row.factura : '',
-              notaCredito:        row.hasOwnProperty('notaCredito') ? row.notaCredito : '',
-              codigoCliente:      row.hasOwnProperty('codigoCliente') ? row.codigoCliente : '',
-              nombreCliente:      row.hasOwnProperty('nombreCliente') ? row.nombreCliente : '',
-              importeFactura:     row.hasOwnProperty('importeFactura') ? row.importeFactura !== '' ? row.importeFactura : 0 : 0,
+              fechaEmision: row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
+              factura: row.hasOwnProperty('factura') ? row.factura : '',
+              notaCredito: row.hasOwnProperty('notaCredito') ? row.notaCredito : '',
+              codigoCliente: row.hasOwnProperty('codigoCliente') ? row.codigoCliente : '',
+              nombreCliente: row.hasOwnProperty('nombreCliente') ? row.nombreCliente : '',
+              importeFactura: row.hasOwnProperty('importeFactura') ? row.importeFactura !== '' ? row.importeFactura : 0 : 0,
               importeNotaCredito: row.hasOwnProperty('importeNotaCredito') ? row.importeNotaCredito !== '' ? row.importeNotaCredito : 0 : 0,
-              importePorPagar:    row.hasOwnProperty('importePorPagar') ? row.importePorPagar !== '' ? row.importePorPagar : 0 : 0,
-              abono:              row.hasOwnProperty('abono') ? row.abono !== '' ? row.abono : 0 : 0,
-              saldo:              row.hasOwnProperty('saldo') ? row.saldo !== '' ? row.saldo : 0 : 0,
-              pago:               row.hasOwnProperty('pago') ? row.pago !== '' ? row.pago : 0 : 0,
-              observaciones:      row.hasOwnProperty('observaciones') ? row.observaciones : '',
-              metodoPago:         row.hasOwnProperty('metodoPago') ? row.metodoPago : '',
-              banco:              row.hasOwnProperty('banco') ? row.banco : '',
-              fechaPago:          row.hasOwnProperty('fechaPago') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
-              numeroCheque:       row.hasOwnProperty('numeroCheque') ? row.numeroCheque !== '' ? row.numeroCheque : 0 : 0,
-              vencidas:           row.hasOwnProperty('vencidas') ? row.vencidas === 'SI' ? true : false : '',
-              agente:             row.hasOwnProperty('agente') ? row.agente : '',
-              ruta:               row.hasOwnProperty('ruta') ? row.ruta : '',
+              importePorPagar: row.hasOwnProperty('importePorPagar') ? row.importePorPagar !== '' ? row.importePorPagar : 0 : 0,
+              abono: row.hasOwnProperty('abono') ? row.abono !== '' ? row.abono : 0 : 0,
+              saldo: row.hasOwnProperty('saldo') ? row.saldo !== '' ? row.saldo : 0 : 0,
+              pago: row.hasOwnProperty('pago') ? row.pago !== '' ? row.pago : 0 : 0,
+              observaciones: row.hasOwnProperty('observaciones') ? row.observaciones : '',
+              metodoPago: row.hasOwnProperty('metodoPago') ? row.metodoPago : '',
+              banco: row.hasOwnProperty('banco') ? row.banco : '',
+              fechaPago: row.hasOwnProperty('fechaPago') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
+              numeroCheque: row.hasOwnProperty('numeroCheque') ? row.numeroCheque !== '' ? row.numeroCheque : 0 : 0,
+              vencidas: row.hasOwnProperty('vencidas') ? row.vencidas === 'SI' ? true : false : '',
+              agente: row.hasOwnProperty('agente') ? row.agente : '',
+              ruta: row.hasOwnProperty('ruta') ? row.ruta : '',
             })
             json = JSON.parse(JSON.stringify(list))
           })
@@ -111,7 +125,7 @@ export default function BDAdmin() {
                 <input className="form-control" type="file" onChange={handleChangeClientes} ref={refClientes} />
               </div>
               <div className='col-2'>
-                <button className='form-control btn btn-success' onClick={() => handleSubmit('Clientes')}>Subir Clientes</button>
+                <button className='form-control btn btn-success' onClick={() => handleSubmit('clientes')}>Subir Clientes</button>
               </div>
             </div>
             <div className="mb-3 row">

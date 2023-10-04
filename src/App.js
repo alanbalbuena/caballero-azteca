@@ -7,7 +7,6 @@ import Ejemplo from "./components/ejemplo";
 import Login from "./components/Login";
 import { Route, Routes } from "react-router-dom";
 import NavBar from "./components/NavBar";
-import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "./util/firebase";
 import Cobranza from "./components/Cobranza";
 import ReporteVentas from "./components/ReporteVentas";
@@ -38,20 +37,21 @@ export default function App() {
         <NavBar permisos={permisos} />
         <Routes>
           <Route path="/folios" element={<ListaFolios nombre={nombreUsuario} permisos={permisos} />} />
+          <Route path="/" exact element={<ListaFolios nombre={nombreUsuario} permisos={permisos} />} />
           <Route path="/adminbd" element={<BDAdmin />} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/cobranza" element={<Cobranza />} />
           <Route path="/ejemplo" element={<Ejemplo />} />
           <Route path="/reporteVentas" element={<ReporteVentas />} />
-          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </>
       :
-      <Routes>
-        <Route path="/" exact element={<Login />} />
+   
+       <Routes>
         <Route path="*" element={<Login />} />
-      </Routes>
+      </Routes> 
   );
 
 }

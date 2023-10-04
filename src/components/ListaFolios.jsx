@@ -28,10 +28,12 @@ export default function ListaFolios(prop) {
   const [firmaElectronica, setFirmaElectronica] = useState('')
   const [selectNumeroRegistros, setSelectNumeroRegistros] = useState('00')
   const [statusBusqueda, setstatusBusqueda] = useState('')
+  const inputFolioValue = useRef(null)
 
   useEffect(() => {
     getFolios()
-  }, [statusBusqueda]);
+    console.log("entro")
+  }, []);
 
   const columns = useMemo(
     () => [
@@ -112,18 +114,20 @@ export default function ListaFolios(prop) {
     }
   }
 
-  const getFolios = () => {
-    if (statusBusqueda !== '') {
+  const getFolios = (consulta) => {
+    if (consulta !== '') {
       setIsLoading(true)
       let foliosRef = null;
       if (userPermiso === 'vendedor' && selectNumeroRegistros !== '00') {
         foliosRef = query(ref(db, 'Folio'), orderByChild('vendedor/nombre'), equalTo(nombreUsuario), limitToLast(parseInt(selectNumeroRegistros)))
-      } else if (statusBusqueda === 'limitado' && selectNumeroRegistros !== '00') {
+      } else if (consulta === 'limitado' && selectNumeroRegistros !== '00') {
         foliosRef = query(ref(db, 'Folio'), limitToLast(parseInt(selectNumeroRegistros)), orderByKey())
-      } else if (statusBusqueda === 'sinautorizar') {
+      } else if (consulta === 'sinautorizar') {
         foliosRef = query(ref(db, 'Folio'), orderByChild('status'), equalTo('noautorizado'))
-      } else if (statusBusqueda === 'sinimprimir') {
+      } else if (consulta === 'sinimprimir') {
         foliosRef = query(ref(db, 'Folio'), orderByChild('status'), equalTo('autorizado'))
+      } else if (consulta === 'folio') {
+        foliosRef = query(ref(db, 'Folio'), orderByChild('folio'), equalTo(inputFolioValue.current.value.trim()))
       } else {
         setIsLoading(false)
         return false
@@ -297,27 +301,27 @@ export default function ListaFolios(prop) {
   return (
     <>
       <div className='container mt-3'>
-        <div className="card shadow">
+        <div className="card shadow"> 
           <div className="card-header">Folios</div>
           <div className="card-body">
             <div className="row mb-3">
-              <div className="col-auto">
-                <select className="form-select" value={selectNumeroRegistros} onChange={e => setSelectNumeroRegistros(e.target.value)} required>
+              <div className="col input-group">
+                <select className="form-select" value={selectNumeroRegistros} onChange={e => setSelectNumeroRegistros(e.target.value)}>
                   <option value='00'>Numero de Registros</option>
                   <option value='10'>10</option>
                   <option value='20'>20</option>
                   <option value='50'>50</option>
                   <option value='100'>100</option>
                 </select>
+                <button className='btn btn-primary' onClick={() => selectNumeroRegistros !== '00' ? getFolios('limitado') : false} >Buscar</button>
               </div>
-              <div className="col-auto">
-                <button className='btn btn-primary' onClick={() => selectNumeroRegistros !== '00' ? setstatusBusqueda('limitado') : false} >Buscar</button>
+              <div className="col input-group">
+                <input type="text" className="form-control" placeholder="Numero de Folio" ref={inputFolioValue} />
+                <button className='btn btn-primary' onClick={() => inputFolioValue.current.value !== '' ? getFolios('folio') : false} >Buscar</button>
               </div>
-              <div className="col-auto">
-                <button className='btn btn-primary' onClick={() => setstatusBusqueda('sinautorizar')} >Sin Autorizar</button>
-              </div>
-              <div className="col-auto">
-                <button className='btn btn-primary' onClick={() => setstatusBusqueda('sinimprimir')} >Sin imprimir</button>
+              <div className="col d-md-flex justify-content-md-end">
+                <button className='btn btn-primary me-2' onClick={() => getFolios('sinautorizar')} >Sin Autorizar</button>
+                <button className='btn btn-primary' onClick={() => getFolios('sinimprimir')} >Sin imprimir</button>
               </div>
             </div>
             <MaterialReactTable

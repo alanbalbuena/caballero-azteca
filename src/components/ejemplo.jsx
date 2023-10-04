@@ -1,39 +1,25 @@
-import { limitToLast, onValue, query, ref } from 'firebase/database'
-import React, { useEffect } from 'react'
-import { useState } from 'react'
-import { auth, db } from '../util/firebase'
+import React, { useState, useEffect } from 'react'
 
 export default function Ejemplo() {
-
   const [data, setData] = useState([])
-  const refFoliolimit2 = query(ref(db, 'Folio'), limitToLast(2))
-  const [permisos, setPermisos] = useState('');
 
   useEffect(() => {
-    onValue(refFoliolimit2, (snapshot) => {
-      let auxData = []
-      snapshot.forEach((childSnapshot) => {
-        auxData.push(childSnapshot.val())
-      })
-      setData(auxData)
-    })
-  }, [])
-
-  /*  onAuthStateChanged(auth, user => {
-     if (user) {
-       setBandera(true);
-       setNombreUsuario(user.displayName);
-     }
-   }) */
+    fetch("http://localhost/caballeroazteca/reporte-ventas-mensual.php")
+    .then((response) => response.json())
+    .then((json) => {
+      setData(json);
+    });
+  }, []);
 
   return (
     <>
-      <h1>{permisos}</h1>
-      {/* {
-        data.map((d, index) => (
-          <p key={index}>{d.folio}</p>
-        ))
-      } */}
+       {data.map((d, index) => (
+        <tr key={index}>
+          <td>{d.marca}</td>
+          
+        </tr>
+      ))}
+
     </>
   )
 
