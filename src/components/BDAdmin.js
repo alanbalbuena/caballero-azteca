@@ -11,14 +11,18 @@ export default function BDAdmin() {
   const refProductos = useRef();
   const refClientes = useRef();
   const refCobranza = useRef();
+  const refFacturas = useRef();
 
   const handleChangeProductos = (event) => setFileProductos(event.target.files[0])
   const handleChangeClientes = (event) => setFileClientes(event.target.files[0])
   const handleChangeCobranza = (event) => setFileCobranza(event.target.files[0])
+  const handleChangeFacturas = (event) => setFileCobranza(event.target.files[0])
+
   const reset = () => {
     refProductos.current.value = '';
     refClientes.current.value = '';
     refCobranza.current.value = '';
+    refFacturas.current.value = '';
   }
 
   const handleSubmit = (tipo) => {
@@ -30,17 +34,17 @@ export default function BDAdmin() {
     } else if (fileCobranza != null && tipo === 'cobranza') {
       objRef = ref(db, 'Cobranza')
     } else {
-      return null;
+      return null
     }
 
-    var clientesReader = new FileReader();
-    clientesReader.readAsBinaryString(tipo === 'productos' ? fileProductos : tipo === 'clientes' ? fileClientes : fileCobranza);
+    var clientesReader = new FileReader()
+    clientesReader.readAsBinaryString(tipo === 'productos' ? fileProductos : tipo === 'clientes' ? fileClientes : fileCobranza)
     clientesReader.onload = async function (e) {
-      let data = e.target.result;
-      let workbook = XLSX.read(data, { type: "binary" });
+      let data = e.target.result
+      let workbook = XLSX.read(data, { type: "binary" })
       workbook.SheetNames.forEach(async sheet => {
-        let rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheet]);
-        var json = '';
+        let rowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheet])
+        var json = ''
         if (tipo === 'clientes' || tipo === 'productos') {
           rowObject.forEach((row) => {
 
@@ -63,7 +67,7 @@ export default function BDAdmin() {
           })
           json = JSON.parse(JSON.stringify(rowObject))
         } else if (tipo === 'cobranza') {
-          let list = [];
+          let list = []
           rowObject.forEach((row) => {
             list.push({
               fechaEmision: row.hasOwnProperty('fechaEmision') ? moment(new Date((row.fechaEmision - 25568) * 86400 * 1000)).format('DD/MM/YYYY') : '',
@@ -104,6 +108,20 @@ export default function BDAdmin() {
     };
   }
 
+  const handleFacturas = () => {
+
+
+    /* const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'React Hooks POST Request Example' })
+    }
+
+    fetch('https://reqres.in/api/posts', requestOptions)
+      .then(response => response.json())
+      .then(data => setPostId(data.id)); */
+  }
+
   return (
     <>
       <div className='container ' style={{ marginTop: '20px' }}>
@@ -135,6 +153,15 @@ export default function BDAdmin() {
               </div>
               <div className='col-2'>
                 <button className='form-control btn btn-success' onClick={() => handleSubmit('cobranza')}>Subir Cobranza</button>
+              </div>
+            </div>
+            <div className="mb-3 row">
+              <label className="form-label">Facturas</label>
+              <div className='col-6'>
+                <input className="form-control" type="file" onChange={handleChangeFacturas} ref={refFacturas} />
+              </div>
+              <div className='col-2'>
+                <button className='form-control btn btn-success' onClick={() => handleFacturas()}>Subir Facturas</button>
               </div>
             </div>
             <br />

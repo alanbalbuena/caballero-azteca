@@ -1,6 +1,6 @@
 import { limitToLast, onValue, query, ref } from 'firebase/database';
 import React, { useEffect, useState } from 'react'
-import { db } from '../util/firebase';
+import { db, urlSiteGround } from '../util/firebase';
 import dataFolios from './dataFolios';
 import { ExportToCsv } from "export-to-csv";
 import Tab from 'react-bootstrap/Tab';
@@ -23,8 +23,7 @@ export default function ReporteVentas() {
     const [fechaFinSemanal, setFechaFinSemanal] = useState()
     const [fechaAyer, setFechaAyer] = useState()
 
-    let urlProduccion = true
-    let url = urlProduccion ? "http://admin.caballeroazteca.com/" : "http://localhost/caballeroazteca/"
+    
 
     /* let jsonMarcas = [
         { nombre: '.' },
@@ -125,7 +124,7 @@ export default function ReporteVentas() {
 
     const reporteMensual = () => {
         if (selectMes !== '00') {
-            fetch(url + 'reporte-ventas-mensual.php?mes=' + selectMes)
+            fetch(urlSiteGround + 'reporte-ventas-mensual.php?mes=' + selectMes)
                 .then((response) => response.json())
                 .then((json) => {
                     setListVentasMensual(json);
@@ -138,7 +137,7 @@ export default function ReporteVentas() {
     const reporteSemanal = () => {
 
         if (fechaInicioSemanal !== undefined && fechaFinSemanal !== undefined) {
-            fetch(url + "reporte-ventas-semanal.php?inicio='" + fechaInicioSemanal + "'&fin='" + fechaFinSemanal + "'")
+            fetch(urlSiteGround + "reporte-ventas-semanal.php?inicio='" + fechaInicioSemanal + "'&fin='" + fechaFinSemanal + "'")
                 .then((response) => response.json())
                 .then((json) => {
 
@@ -174,7 +173,7 @@ export default function ReporteVentas() {
 
     const reporteMarca = () => {
         obtenerSemanaActual()
-        fetch(url + "reporte-ventas-marca.php?inicio='" + fechaInicioSemanal + "'&fin='" + fechaFinSemanal + "'&ayer='" + fechaAyer + "'&marca='" + selectMarca + "'")
+        fetch(urlSiteGround + "reporte-ventas-marca.php?inicio='" + fechaInicioSemanal + "'&fin='" + fechaFinSemanal + "'&ayer='" + fechaAyer + "'&marca='" + selectMarca + "'")
             .then((response) => response.json())
             .then((json) => {
 

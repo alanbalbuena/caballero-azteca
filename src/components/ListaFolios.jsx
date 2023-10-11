@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { onValue, ref, query, limitToLast, orderByKey, update, remove, orderByChild, equalTo } from "firebase/database";
-import { db } from "../util/firebase";
+import { onValue, ref, query, limitToLast, orderByKey, update, remove, orderByChild, equalTo, onChildAdded, onChildChanged } from "firebase/database";
+import { db, urlSiteGround } from "../util/firebase";
 import { MaterialReactTable } from "material-react-table";
 import { ExportToCsv } from 'export-to-csv';
 import { Box, IconButton, Button } from '@mui/material';
@@ -32,7 +32,6 @@ export default function ListaFolios(prop) {
 
   useEffect(() => {
     getFolios()
-    console.log("entro")
   }, []);
 
   const columns = useMemo(
@@ -100,6 +99,7 @@ export default function ListaFolios(prop) {
   }
 
   function autorizar(data) {
+    handleCloseModalAutorizacion(true)
     if (data.status === "noautorizado") {
       if (window.confirm("Desea autorizar el folio: " + data.folio + "?")) {
         update(ref(db, 'Folio/' + data.key), {
@@ -138,6 +138,20 @@ export default function ListaFolios(prop) {
         snapshot.forEach((childSnapshot) => {
           var key = childSnapshot.key;
           var data = childSnapshot.val();
+
+          if (data.status === 'noautorizado') {
+            fetch(urlSiteGround + 'validar-autorizacion-automatica.php?codigoCliente=' + data.codigoCliente)
+              .then((response) => response.json())
+              .then((json) => {
+                if (json[0].status === '') {
+                  update(ref(db, 'Folio/' + key), {
+                    status: 'autorizado',
+                    historial: data.historial + ' -> Autorizado por: Automaticamente',
+                  })
+                }
+              })
+          }
+
           list.push({
             key: key,
             fecha: data.fecha,
@@ -160,6 +174,7 @@ export default function ListaFolios(prop) {
             productos: data.listaDeProductos.sort((a, b) => a.marca > b.marca ? 1 : -1),
           })
         })
+
         setListaFolios(list.reverse())
         setIsLoading(false)
       })
@@ -291,17 +306,33 @@ export default function ListaFolios(prop) {
   };
 
   const [open, setOpen] = useState(false);
+  const [openModalAutorizacion, setOpenModalAutorizacion] = useState(false);
   const [historial, setHistorial] = useState('');
   const handleOpen = (historial) => {
     setOpen(true);
     setHistorial(historial)
   }
+
+  const [infoAutorizacion, setInfoAutorizacion] = useState([{}]);
+  const handleOpenModalAutorizacion = (data) => {
+    fetch(urlSiteGround + 'validar-autorizacion-automatica.php?codigoCliente=' + data.codigoCliente)
+      .then((response) => response.json())
+      .then((json) => {
+        let auxArrayJson = []
+        auxArrayJson.push(json[0])
+        auxArrayJson.push(data)
+        setInfoAutorizacion(auxArrayJson)
+      })
+    setOpenModalAutorizacion(true)
+  }
+
   const handleClose = () => setOpen(false);
+  const handleCloseModalAutorizacion = () => setOpenModalAutorizacion(false);
 
   return (
     <>
       <div className='container mt-3'>
-        <div className="card shadow"> 
+        <div className="card shadow">
           <div className="card-header">Folios</div>
           <div className="card-body">
             <div className="row mb-3">
@@ -366,7 +397,7 @@ export default function ListaFolios(prop) {
                   <IconButton disabled={(row.original.status === 'noautorizado' || row.original.status === 'impreso') ? (userPermiso === 'superusuario' && row.original.status !== 'noautorizado' ? false : true) : false} onClick={() => { generarPdf(row.original, 'original') }}>
                     <LocalPrintshopIcon color={row.original.status === 'impreso' ? 'primary' : 'disabled'} />
                   </IconButton>
-                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => autorizar(row.original)}>
+                  <IconButton disabled={userPermiso === 'superusuario' ? false : true} onClick={() => handleOpenModalAutorizacion(row.original)}>
                     <VerifiedIcon color={row.original.status === 'noautorizado' ? 'disabled' : 'success'} />
                   </IconButton>
                   {
@@ -447,6 +478,24 @@ export default function ListaFolios(prop) {
           <Typography id="modal-modal-description" sx={{ mt: 2 }}>
             {historial}
           </Typography>
+        </Box>
+      </Modal>
+
+      <Modal
+        open={openModalAutorizacion}
+        onClose={handleCloseModalAutorizacion}
+        aria-labelledby="parent-modal-title"
+        aria-describedby="parent-modal-description"
+      >
+        <Box sx={{ ...style, width: 400 }}>
+          <h3 id="parent-modal-title">Codigo: {infoAutorizacion[0].CODIGO_CLIENTE}</h3>
+          <p id="parent-modal-description">Limite Credito: {infoAutorizacion[0].limiteCredito}</p>
+          <p id="parent-modal-description">Saldo: {infoAutorizacion[0].saldo}</p>
+          <p id="parent-modal-description">Vigentes: {infoAutorizacion[0].no_vencidas}</p>
+          <p id="parent-modal-description">Vencidas 30: {infoAutorizacion[0].vencidas}</p>
+          <p id="parent-modal-description">Vencidas +45: {infoAutorizacion[0].bloqueadas}</p>
+          <p id="parent-modal-description">Status: {infoAutorizacion[0].status}</p>
+          <button className='btn btn-primary' onClick={() => autorizar(infoAutorizacion[1])} >Autorizar</button>
         </Box>
       </Modal>
 

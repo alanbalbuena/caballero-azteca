@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const entornoPruduccion = true;
+const entornoPruduccionSiteGround = true;
 
 const firebaseConfigTest = {
   apiKey: "AIzaSyD5ceEqOwx_vgWHhuuAhrAk8nQ6fbVYIGM",
@@ -32,4 +33,7 @@ export default firebase = initializeApp(entornoPruduccion ? firebaseConfigProd :
 export const db = getDatabase(firebase);
 export const auth = getAuth();
 export const varStorage = getStorage();
+
+export const urlSiteGround = entornoPruduccionSiteGround ? "http://admin.caballeroazteca.com/" : "http://localhost/caballeroazteca/"
+ 
 
