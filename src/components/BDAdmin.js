@@ -15,6 +15,8 @@ export default function BDAdmin(props) {
   const [cargandoProductosNewBD, setCargandoProductosNewBD] = useState(false)
   const [cargandoFacturas, setCargandoFacturas] = useState(false)
   const [cargandoRemisiones, setCargandoRemisiones] = useState(false)
+  const [tablasActualizadas, setTablasActualizadas] = useState({})
+  const [actualizar, setActualizar] = useState(true)
 
   const refProductos = useRef();
   const refClientes = useRef();
@@ -31,7 +33,13 @@ export default function BDAdmin(props) {
       .then((json) => {
         setUltimoFolio(json)
       })
-  }, []);
+
+    fetch(urlSiteGround + 'tablasActualizadas.php')
+      .then((response) => response.json())
+      .then((json) => {
+        setTablasActualizadas(json)
+      })
+  }, [actualizar]);
 
   const reset = () => {
     if (refProductos.current !== undefined) {
@@ -244,6 +252,7 @@ export default function BDAdmin(props) {
         setCargandoProductos(false)
         setCargandoProductosNewBD(false)
         setCargandoRemisiones(false)
+        setActualizar(actualizar ? false : true)
       })
   }
 
@@ -278,6 +287,13 @@ export default function BDAdmin(props) {
     )
   }
 
+  function UltimaActualizacion({data}) {
+    return (
+      <div className='col-2' style={{color:'darkgray'}}>
+        <p>{data}</p>
+      </div>
+    )
+  }
   return (
     <>
       <div className='container ' style={{ marginTop: '20px' }}>
@@ -318,6 +334,7 @@ export default function BDAdmin(props) {
                       }
 
                     </div>
+                    <UltimaActualizacion data={tablasActualizadas.tbl_ventas} />
                     <div className='col-2'>
                       <p>{ultimoFolio.folio}</p>
                     </div>
@@ -338,6 +355,7 @@ export default function BDAdmin(props) {
                     : <button className='form-control btn btn-success' onClick={() => handleFacturas()}>Subir Facturas</button>
                 }
               </div>
+              <UltimaActualizacion data={tablasActualizadas.tbl_facturas} />
             </div>
             <div className="mb-3 row">
               <label className="form-label">Remisiones</label>
@@ -351,6 +369,7 @@ export default function BDAdmin(props) {
                     : <button className='form-control btn btn-success' onClick={() => handleRemisiones()}>Subir Remisiones</button>
                 }
               </div>
+              <UltimaActualizacion data={tablasActualizadas.tbl_remisiones} />
             </div>
 
             {/* <div className="mb-3 row">

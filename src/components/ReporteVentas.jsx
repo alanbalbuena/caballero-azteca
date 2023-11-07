@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { db, urlSiteGround } from '../util/firebase';
+import { urlSiteGround } from '../util/firebase';
 import { ExportToCsv } from "export-to-csv";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
-import { limitToLast, onValue, query, ref } from 'firebase/database';
 
 export default function ReporteVentas() {
     const [listVentasMensual, setListVentasMensual] = useState([])
@@ -15,6 +14,7 @@ export default function ReporteVentas() {
     const [fechaInicioSemanal, setFechaInicioSemanal] = useState()
     const [fechaFinSemanal, setFechaFinSemanal] = useState()
     const [fechaAyer, setFechaAyer] = useState()
+    const [ultimaActualizacion, setUltimaActualizacion] = useState({})
 
     let jsonMarcas = [{ marca: 'metalflu' }, { marca: 'fleximatic' }, { marca: 'elpro' }, { marca: 'fxb' }]
 
@@ -32,6 +32,14 @@ export default function ReporteVentas() {
         { nombre: 'Noviembre', valor: '11' },
         { nombre: 'Diciembre', valor: '12' },
     ]
+
+    useEffect(() => {
+        fetch(urlSiteGround + 'tablasActualizadas.php')
+          .then((response) => response.json())
+          .then((json) => {
+            setUltimaActualizacion(json)
+          })
+      }, []);
 
     useEffect(() => {
         if (key === 'mensual') {
@@ -226,6 +234,9 @@ export default function ReporteVentas() {
                                                     ))
                                                 }
                                             </select>
+                                        </div>
+                                        <div className="col-auto ms-auto">
+                                            <p style={{color:'darkgray'}}   >Ultima Actualizacion: {ultimaActualizacion.tbl_ventas}</p>
                                         </div>
                                         <div className="col-auto ms-auto">
                                             <button className='btn btn-success' onClick={handleExport}>Exportar Excel</button>
