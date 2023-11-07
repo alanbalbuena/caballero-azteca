@@ -12,6 +12,8 @@ import Cobranza from "./components/Cobranza";
 import ReporteVentas from "./components/ReporteVentas";
 import { onValue, ref } from "firebase/database";
 import { useAuthState } from "react-firebase-hooks/auth";
+import Bancos from "./components/Bancos";
+import Pagos from "./components/Pagos";
 
 export default function App() {
 
@@ -38,13 +40,15 @@ export default function App() {
         <Routes>
           <Route path="/folios" element={<ListaFolios nombre={nombreUsuario} permisos={permisos} />} />
           <Route path="/" exact element={<ListaFolios nombre={nombreUsuario} permisos={permisos} />} />
-          <Route path="/adminbd" element={<BDAdmin />} />
+          <Route path="/adminbd" element={<BDAdmin permisos={permisos}/>} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/cobranza" element={<Cobranza />} />
           <Route path="/ejemplo" element={<Ejemplo />} />
           <Route path="/reporteVentas" element={<ReporteVentas />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/bancos" element={<Bancos />} />
+          <Route path="/pagos" element={<Pagos />} />
         </Routes>
       </>
       :

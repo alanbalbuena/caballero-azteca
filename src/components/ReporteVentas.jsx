@@ -1,83 +1,22 @@
-import { limitToLast, onValue, query, ref } from 'firebase/database';
 import React, { useEffect, useState } from 'react'
 import { db, urlSiteGround } from '../util/firebase';
-import dataFolios from './dataFolios';
 import { ExportToCsv } from "export-to-csv";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
-import { event } from 'jquery';
+import { limitToLast, onValue, query, ref } from 'firebase/database';
 
 export default function ReporteVentas() {
     const [listVentasMensual, setListVentasMensual] = useState([])
     const [listVentasSemanal, setListVentasSemanal] = useState([])
     const [listVentasMarca, setListVentasMarca] = useState([])
-    const [listTotalPorCliente, setListTotalPorCliente] = useState([])
-    const [rutasAgente, setRutasAgente] = useState([])
-    const [dataFoliosjson, setDataFoliosJson] = useState(dataFolios)
     const [selectMes, setselectMes] = useState(new Date().getMonth() + 1)
-    const [selectRuta, setselectRuta] = useState('00')
     const [selectMarca, setselectMarca] = useState('metalflu')
-    const [selectAgente, setselectAgente] = useState('00')
     const [key, setKey] = useState('mensual');
     const [fechaInicioSemanal, setFechaInicioSemanal] = useState()
     const [fechaFinSemanal, setFechaFinSemanal] = useState()
     const [fechaAyer, setFechaAyer] = useState()
 
-    
-
-    /* let jsonMarcas = [
-        { nombre: '.' },
-        { nombre: 'ALBATROS' },
-        { nombre: 'ALMET' },
-        { nombre: 'BARRETO' },
-        { nombre: 'BELLOTA' },
-        { nombre: 'BORO' },
-        { nombre: 'BRONCES FINOS' },
-        { nombre: 'BROTIMEX' },
-        { nombre: 'BRUNA' },
-        { nombre: 'DEVCON' },
-        { nombre: 'ELPRO' },
-        { nombre: 'FAMA' },
-        { nombre: 'FLEXIMATIC' },
-        { nombre: 'FRANCIA' },
-        { nombre: 'FUNDICIONES' },
-        { nombre: 'FUSION' },
-        { nombre: 'FXN' },
-        { nombre: 'HECORT' },
-        { nombre: 'IUSA' },
-        { nombre: 'LINMEX' },
-        { nombre: 'MARDUCK' },
-        { nombre: 'METALFLU' },
-        { nombre: 'MEXICHEM' },
-        { nombre: 'MIBER' },
-        { nombre: 'MUELLER' },
-        { nombre: 'NACOBRE' },
-        { nombre: 'OMEGA' },
-        { nombre: 'OXAL' },
-        { nombre: 'PLASTITRIM' },
-        { nombre: 'PRESTO' },
-        { nombre: 'SERRATOS' },
-        { nombre: 'SIAMP' },
-        { nombre: 'SOLVER' },
-        { nombre: 'SURTEK' },
-        { nombre: 'VARIOS' },
-    ] */
-
     let jsonMarcas = [{ marca: 'metalflu' }, { marca: 'fleximatic' }, { marca: 'elpro' }, { marca: 'fxb' }]
-
-    let jsonVendedores = [
-        { nombre: 'cesar ramirez', rutas: [{ nombre: 'LOCAL' }, { nombre: 'CHAPALA' }] },
-        { nombre: 'rodolfo castellanos', rutas: [{ nombre: 'LOCAL' }] },
-        { nombre: 'horacio tejeda', rutas: [{ nombre: 'ZAC1' }, { nombre: 'COLIMA', nombre: 'LOCAL' }] },
-        { nombre: 'horacio guerrero', rutas: [{ nombre: 'LOCAL' }, { nombre: 'SAN MARCOS' }, { nombre: 'SAN GABRIEL' }] },
-        { nombre: 'omar rivas', rutas: [{ nombre: 'TEPIC' }, { nombre: 'VALLARTA' }, { nombre: 'TUITO' }] },
-        { nombre: 'alfredo arreola', rutas: [{ nombre: 'ZAMORA' }, { nombre: 'ZAC2' }, { nombre: 'SAN BLAS' }, { nombre: 'ROSARIO' }] },
-        { nombre: 'cesar serrano', rutas: [{ nombre: 'AGUASCALIENTES' }] },
-        { nombre: 'juan cruz', rutas: [{ nombre: 'TECO LA HUERTA' }, { nombre: 'MANZANILLO' }] },
-        { nombre: 'enrique rivera', rutas: [{ nombre: 'LOCAL' }] },
-        { nombre: 'carlos bautista', rutas: [{ nombre: 'AGUASCALIENTES' }] },
-        { nombre: 'total_x_marca' },
-    ]
 
     let jsonMeses = [
         { nombre: 'Enero', valor: '1' },
@@ -93,20 +32,6 @@ export default function ReporteVentas() {
         { nombre: 'Noviembre', valor: '11' },
         { nombre: 'Diciembre', valor: '12' },
     ]
-
-    let jsonTotales = [{
-        cesar_ramirez: 0,
-        rodolfo_castellanos: 0,
-        horacio_tejeda: 0,
-        horacio_guerrero: 0,
-        omar_rivas: 0,
-        alfredo_arreola: 0,
-        cesar_serrano: 0,
-        juan_cruz: 0,
-        enrique_rivera: 0,
-        carlos_bautista: 0,
-        total_x_marca: 0,
-    }]
 
     useEffect(() => {
         if (key === 'mensual') {
@@ -124,13 +49,13 @@ export default function ReporteVentas() {
 
     const reporteMensual = () => {
         if (selectMes !== '00') {
-            fetch(urlSiteGround + 'reporte-ventas-mensual.php?mes=' + selectMes)
+            fetch(urlSiteGround + 'reporte-ventas-mensual.php?mes=' + "'" + selectMes + "'")
                 .then((response) => response.json())
                 .then((json) => {
                     setListVentasMensual(json);
                 }).catch((error) => {
                     alert("Ocurrio un error con la API " + error)
-                });;
+                })
         }
     }
 
@@ -208,34 +133,8 @@ export default function ReporteVentas() {
 
     }
 
-
-    /* const handleLimpiar = () => {
-        setselectAgente('00')
-        setselectMarca('00')
-        setselectMes('00')
-        setselectRuta('00')
-        setListVentas([])
-        setListTotalPorCliente([])
-    } */
-
     function currencyFormat(num) {
         return num === 0 ? '' : '$' + parseFloat(num).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-    }
-
-    const nombreFormat = (str) => {
-        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    }
-
-    const handleSelectAgente = (agente) => {
-        setselectAgente(agente)
-        for (let i = 0; i < jsonVendedores.length; i++) {
-            if (jsonVendedores[i].nombre === agente) {
-                setRutasAgente(jsonVendedores[i].rutas)
-                break
-            }
-
-
-        }
     }
 
     const handleExport = () => {
@@ -255,19 +154,19 @@ export default function ReporteVentas() {
     }
 
     const obtenerSemanaActual = () => {
-        let dateInicio = new Date;
-        let dateFin =    new Date;
-        let dateAyer =   new Date;
+        let dateInicio = new Date();
+        let dateFin = new Date();
+        let dateAyer = new Date();
 
-        let inicio =      dateInicio.getDate() - dateInicio.getDay() - 1;
+        let inicio = dateInicio.getDate() - dateInicio.getDay() - 1;
         let fechaInicio = new Date(dateInicio.setDate(inicio));
-        let fechaFin =    new Date(dateFin.setDate(inicio + 6));
-        let fechaAyer =   new Date(dateAyer.setDate(dateAyer.getDate() - 1))
+        let fechaFin = new Date(dateFin.setDate(inicio + 6));
+        let fechaAyer = new Date(dateAyer.setDate(dateAyer.getDate() - 1))
 
         //obetiene la fecha de inicio
-        let dayInicio =   fechaInicio.getDate();
+        let dayInicio = fechaInicio.getDate();
         let monthInicio = fechaInicio.getMonth() + 1;
-        let yearInicio =  fechaInicio.getFullYear();
+        let yearInicio = fechaInicio.getFullYear();
 
         if (monthInicio < 10) monthInicio = "0" + monthInicio;
         if (dayInicio < 10) dayInicio = "0" + dayInicio;
@@ -307,7 +206,6 @@ export default function ReporteVentas() {
         setFechaFinSemanal(event.target.value)
     }
 
-
     return (
         <>
             <div className='container' style={{ marginTop: '20px' }}>
@@ -329,42 +227,6 @@ export default function ReporteVentas() {
                                                 }
                                             </select>
                                         </div>
-                                        {/* <div className="col-auto">
-                                    <select className="form-select" value={selectAgente} onChange={e => handleSelectAgente(e.target.value)}>
-                                        <option value={'00'}>Selecciona un Agente</option>
-                                        {
-                                            jsonVendedores.map((v, index) => (
-                                                <option key={index} value={v.nombre}>{v.nombre}</option>
-                                            ))
-                                        }
-                                    </select>
-                                </div>
-                                <div className="col-auto">
-                                    <select className="form-select" value={selectRuta} onChange={e => setselectRuta(e.target.value)}>
-                                        <option value={'00'}>Selecciona una Ruta</option>
-                                        {
-                                            rutasAgente.map((r, index) => (
-                                                <option key={index} value={r.nombre}>{r.nombre}</option>
-                                            ))
-                                        }
-                                    </select>
-                                </div>
-                                <div className="col-auto">
-                                    <select className="form-select" value={selectMarca} onChange={e => setselectMarca(e.target.value)}>
-                                        <option value='00'>Selecciona una Marca</option>
-                                        {
-                                            jsonMarcas.map((m, index) => (
-                                                <option key={index} value={m.nombre}>{m.nombre}</option>
-                                            ))
-                                        }
-                                    </select>
-                                </div> 
-                                        <div className="col-auto">
-                                            <button className='btn btn-primary' onClick={handleBuscar}>Buscar</button>
-                                        </div>
-                                        <div className="col-auto">
-                                            <button className='btn btn-secondary' onClick={handleLimpiar}>Limpiar</button>
-                                        </div>*/}
                                         <div className="col-auto ms-auto">
                                             <button className='btn btn-success' onClick={handleExport}>Exportar Excel</button>
                                         </div>
@@ -406,26 +268,6 @@ export default function ReporteVentas() {
                                                 ))
                                             }
                                         </tbody>
-                                        {/* <tfoot>
-                                    {
-                                        listTotalPorCliente.map((t, index) => (
-                                            <tr key={index}>
-                                                <td>Total</td>
-                                                <td className='text-end'>{currencyFormat(t.cesar_ramirez)}</td>
-                                                <td className='text-end'>{currencyFormat(t.rodolfo_castellanos)}</td>
-                                                <td className='text-end'>{currencyFormat(t.horacio_tejeda)}</td>
-                                                <td className='text-end'>{currencyFormat(t.horacio_guerrero)}</td>
-                                                <td className='text-end'>{currencyFormat(t.omar_rivas)}</td>
-                                                <td className='text-end'>{currencyFormat(t.alfredo_arreola)}</td>
-                                                <td className='text-end'>{currencyFormat(t.cesar_serrano)}</td>
-                                                <td className='text-end'>{currencyFormat(t.juan_cruz)}</td>
-                                                <td className='text-end'>{currencyFormat(t.enrique_rivera)}</td>
-                                                <td className='text-end'>{currencyFormat(t.carlos_bautista)}</td>
-                                                <td className='text-end'>{currencyFormat(t.total_x_marca)}</td>
-                                            </tr>
-                                        ))
-                                    }
-                                </tfoot> */}
                                     </table>
                                 </div>
                             </Tab>

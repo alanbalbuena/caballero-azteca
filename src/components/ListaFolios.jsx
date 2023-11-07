@@ -1,12 +1,10 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { onValue, ref, query, limitToLast, orderByKey, update, remove, orderByChild, equalTo, onChildAdded, onChildChanged } from "firebase/database";
+import { onValue, ref, query, limitToLast, orderByKey, update, remove, orderByChild, equalTo, } from "firebase/database";
 import { db, urlSiteGround } from "../util/firebase";
 import { MaterialReactTable } from "material-react-table";
 import { ExportToCsv } from 'export-to-csv';
 import { Box, IconButton, Button } from '@mui/material';
 import { useReactToPrint } from 'react-to-print';
-import Modal from '@mui/material/Modal';
-import Typography from '@mui/material/Typography';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 import VerifiedIcon from '@mui/icons-material/Verified';
@@ -16,6 +14,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import InfoIcon from '@mui/icons-material/Info';
 import logo from '../logo-caballero-azteca.jpg'
 import '../Styles/Components/pdf.css'
+import { Col, Container, ModalBody, Row, Modal } from "react-bootstrap";
 
 export default function ListaFolios(prop) {
   const [nombreUsuario] = useState(prop.nombre)
@@ -27,7 +26,6 @@ export default function ListaFolios(prop) {
   const [textoConIva, setTextoConIva] = useState('')
   const [firmaElectronica, setFirmaElectronica] = useState('')
   const [selectNumeroRegistros, setSelectNumeroRegistros] = useState('00')
-  const [statusBusqueda, setstatusBusqueda] = useState('')
   const inputFolioValue = useRef(null)
 
   useEffect(() => {
@@ -189,8 +187,8 @@ export default function ListaFolios(prop) {
     showLabels: true,
     useBom: true,
     useKeysAsHeaders: false,
-    filename: 'Folios',
-    headers: ['Fecha', 'Folio', 'Codigo Cliente', 'Cliente', 'Importe sin iva', 'Agente', 'Ruta', 'Ciudad', 'Observaciones'],
+    filename: 'PEDIDOS',
+    headers: ['FECHA', 'FOLIO', 'ID CLIENTE', 'CLIENTE', 'IMPORTE', 'CIUDAD', 'RUTA', 'VENDEDOR', 'FACTURA'],
   };
 
   const csvOptionsProductos = {
@@ -200,8 +198,8 @@ export default function ListaFolios(prop) {
     showLabels: true,
     useBom: true,
     useKeysAsHeaders: false,
-    filename: 'Productos',
-    headers: ['Folio', 'Cantidad', 'Codigo', 'Marca', 'Producto', 'Precio U', 'Sub Total', 'Tipo', 'Fecha', 'Agente', 'Codigo cliente', 'Nombre cliente', 'Ruta', 'Observaciones'],
+    filename: 'PRODUCTOS',
+    headers: ['folio', 'codigo', 'cantidad', 'marca', 'articulo', 'precio', 'totalSinIva', 'documento', 'fecha', 'agente', 'cliente'],
   };
 
   const csvExporterFolios = new ExportToCsv(csvOptionsFolios);
@@ -215,19 +213,16 @@ export default function ListaFolios(prop) {
       f.original.productos.map((p) => {
         let dataProducto = {
           folio: f.original.folio,
+          codigo: p.code,
           cantidad: p.cantidad,
-          code: p.code,
           marca: p.marca,
-          nombre: p.nombre,
+          articulo: p.nombre,
           precio: f.original.tipoDocumento === 'Factura' ? p.precio : (p.precio / 1.16).toFixed(2),
-          subTotal: f.original.tipoDocumento === 'Factura' ? p.precio * p.cantidad : ((p.precio / 1.16) * p.cantidad).toFixed(2),
-          tipoDocumento: f.original.tipoDocumento,
-          fecha: f.original.fecha,
-          vendedor: f.original.vendedor,
-          codigoCliente: f.original.codigoCliente,
-          cliente: f.original.cliente,
-          ruta: f.original.ruta,
-          observaciones: f.original.observaciones,
+          totalSinIva: f.original.tipoDocumento === 'Factura' ? p.precio * p.cantidad : ((p.precio / 1.16) * p.cantidad).toFixed(2),
+          documento: f.original.tipoDocumento,
+          fecha: f.original.fecha.split("-").reverse().join("-"),
+          agente: f.original.vendedor,
+          cliente: f.original.codigoCliente,
         }
 
         listProductos.push(dataProducto);
@@ -240,18 +235,18 @@ export default function ListaFolios(prop) {
         codigoCliente: f.original.codigoCliente,
         cliente: f.original.cliente,
         total: f.original.tipoDocumento === 'Factura' ? f.original.total : (f.original.total / 1.16).toFixed(2),
-        vendedor: f.original.vendedor,
-        ruta: f.original.ruta,
         ciudad: f.original.ciudad,
-        observaciones: f.original.observaciones,
+        ruta: f.original.ruta,
+        vendedor: f.original.vendedor,
+        factura: f.original.tipoDocumento,
       }
 
       listFolios.push(dataFolio);
       return null;
     })
 
-    csvExporterFolios.generateCsv(listFolios);
-    csvExporterProductos.generateCsv(listProductos);
+    csvExporterFolios.generateCsv(listFolios.reverse());
+    csvExporterProductos.generateCsv(listProductos.reverse());
     return null
   }
 
@@ -293,35 +288,23 @@ export default function ListaFolios(prop) {
     return '$' + parseFloat(num).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
   }
 
-  const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-  };
-
-  const [open, setOpen] = useState(false);
-  const [openModalAutorizacion, setOpenModalAutorizacion] = useState(false);
-  const [historial, setHistorial] = useState('');
+  const [open, setOpen] = useState(false)
+  const [openModalAutorizacion, setOpenModalAutorizacion] = useState(false)
+  const [historial, setHistorial] = useState('')
   const handleOpen = (historial) => {
     setOpen(true);
     setHistorial(historial)
   }
 
-  const [infoAutorizacion, setInfoAutorizacion] = useState([{}]);
+  const [estadoCuenta, setEstadoCuenta] = useState({ 'bloqueado': [], 'vencido': [], 'novencido': [], 'saldos': {}, })
+  const [folioActual, setFolioActual] = useState({})
   const handleOpenModalAutorizacion = (data) => {
-    fetch(urlSiteGround + 'validar-autorizacion-automatica.php?codigoCliente=' + data.codigoCliente)
+    fetch(urlSiteGround + 'estadoCuenta.php?codigoCliente=' + "'" + data.codigoCliente + "'")
       .then((response) => response.json())
       .then((json) => {
-        let auxArrayJson = []
-        auxArrayJson.push(json[0])
-        auxArrayJson.push(data)
-        setInfoAutorizacion(auxArrayJson)
+        setFolioActual(data)
+        setEstadoCuenta(json)
+
       })
     setOpenModalAutorizacion(true)
   }
@@ -336,7 +319,7 @@ export default function ListaFolios(prop) {
           <div className="card-header">Folios</div>
           <div className="card-body">
             <div className="row mb-3">
-              <div className="col input-group">
+              <div className="col-12 col-lg d-flex mb-3">
                 <select className="form-select" value={selectNumeroRegistros} onChange={e => setSelectNumeroRegistros(e.target.value)}>
                   <option value='00'>Numero de Registros</option>
                   <option value='10'>10</option>
@@ -346,11 +329,11 @@ export default function ListaFolios(prop) {
                 </select>
                 <button className='btn btn-primary' onClick={() => selectNumeroRegistros !== '00' ? getFolios('limitado') : false} >Buscar</button>
               </div>
-              <div className="col input-group">
+              <div className="col-12 col-lg d-flex mb-3">
                 <input type="text" className="form-control" placeholder="Numero de Folio" ref={inputFolioValue} />
                 <button className='btn btn-primary' onClick={() => inputFolioValue.current.value !== '' ? getFolios('folio') : false} >Buscar</button>
               </div>
-              <div className="col d-md-flex justify-content-md-end">
+              <div className="col" style={{ textAlign: "center" }}>
                 <button className='btn btn-primary me-2' onClick={() => getFolios('sinautorizar')} >Sin Autorizar</button>
                 <button className='btn btn-primary' onClick={() => getFolios('sinimprimir')} >Sin imprimir</button>
               </div>
@@ -465,38 +448,131 @@ export default function ListaFolios(prop) {
       </div>
       <div style={{ marginBottom: '900px' }} />
 
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Historial
-          </Typography>
-          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-            {historial}
-          </Typography>
-        </Box>
+      <Modal show={open} onHide={handleClose} aria-labelledby="contained-modal-title-vcenter">
+        <Container style={{textAlign:'center'}}>
+          <Modal.Header>
+            <Modal.Title>Historial</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{historial}</Modal.Body>
+        </Container>
       </Modal>
 
-      <Modal
-        open={openModalAutorizacion}
-        onClose={handleCloseModalAutorizacion}
-        aria-labelledby="parent-modal-title"
-        aria-describedby="parent-modal-description"
-      >
-        <Box sx={{ ...style, width: 400 }}>
-          <h3 id="parent-modal-title">Codigo: {infoAutorizacion[0].CODIGO_CLIENTE}</h3>
-          <p id="parent-modal-description">Limite Credito: {infoAutorizacion[0].limiteCredito}</p>
-          <p id="parent-modal-description">Saldo: {infoAutorizacion[0].saldo}</p>
-          <p id="parent-modal-description">Vigentes: {infoAutorizacion[0].no_vencidas}</p>
-          <p id="parent-modal-description">Vencidas 30: {infoAutorizacion[0].vencidas}</p>
-          <p id="parent-modal-description">Vencidas +45: {infoAutorizacion[0].bloqueadas}</p>
-          <p id="parent-modal-description">Status: {infoAutorizacion[0].status}</p>
-          <button className='btn btn-primary' onClick={() => autorizar(infoAutorizacion[1])} >Autorizar</button>
-        </Box>
+      <Modal show={openModalAutorizacion} onHide={handleCloseModalAutorizacion} aria-labelledby="contained-modal-title-vcenter">
+        <ModalBody style={{ fontSize: '15px', textAlign: 'center' }}>
+          <Container>
+            <Row>
+              <p>{folioActual.cliente}</p>
+            </Row>
+            <Row>
+              <Col>
+                <p># cliente: {folioActual.codigoCliente}</p>
+              </Col>
+              <Col>
+                <p>Credito: {currencyFormat(estadoCuenta.saldos['limiteCredito'])}</p>
+              </Col>
+            </Row>
+          </Container>
+
+          <Container>
+            {/* TABLA PARA FACTURAS BLOQUEADAS */}
+            {estadoCuenta.bloqueado.length !== 0 ?
+              <>
+                <table style={{ width: '100%' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#F3F3F3", textAlign: 'center' }}>
+                      <th>Fecha</th>
+                      <th>Factura</th>
+                      <th>Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {estadoCuenta.bloqueado.map((f, index) => (
+                      <tr key={index}>
+                        <td style={{ padding: "3px" }}>{f.FECHA_DE_EMISION}</td>
+                        <td style={{ padding: "3px" }}>{f.NUMERO_DE_FACTURA}</td>
+                        <td style={{ padding: "3px" }}>{currencyFormat(f.SALDO)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th style={{ textAlign: "right" }} colSpan="2">Total Bloqueado:</th>
+                      <td>{currencyFormat(estadoCuenta.saldos['BLOQUEADO'])}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+                <br />
+              </>
+              : <></>
+            }
+
+            {/* TABLA PARA FACTURAS VENCIDAS */}
+            {estadoCuenta.vencido.length !== 0 ?
+              <>
+                <table style={{ width: '100%' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#F3F3F3", textAlign: 'center' }}>
+                      <th>Fecha</th>
+                      <th>Factura</th>
+                      <th>Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {estadoCuenta.vencido.map((f, index) => (
+                      <tr key={index}>
+                        <td style={{ padding: "3px" }}>{f.FECHA_DE_EMISION}</td>
+                        <td style={{ padding: "3px" }}>{f.NUMERO_DE_FACTURA}</td>
+                        <td style={{ padding: "3px" }}>{currencyFormat(f.SALDO)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th style={{ textAlign: "right" }} colSpan="2">Total Vencido :</th>
+                      <td>{currencyFormat(estadoCuenta.saldos['VENCIDO'])}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+                <br />
+              </>
+              : <></>
+            }
+
+            {/* TABLA PARA FACTURAS NO VENCIDAS */}
+            {estadoCuenta.novencido.length !== 0 ?
+              <>
+                <table style={{ width: '100%' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#F3F3F3", textAlign: 'center' }}>
+                      <th>Fecha</th>
+                      <th>Factura</th>
+                      <th>Saldo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {estadoCuenta.novencido.map((f, index) => (
+                      <tr key={index}>
+                        <td style={{ padding: "3px" }}>{f.FECHA_DE_EMISION}</td>
+                        <td style={{ padding: "3px" }}>{f.NUMERO_DE_FACTURA}</td>
+                        <td style={{ padding: "3px" }}>{currencyFormat(f.SALDO)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th style={{ textAlign: "right" }} colSpan="2">Total No vencido:</th>
+                      <td>{currencyFormat(estadoCuenta.saldos['NO_VENCIDO'])}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+                <br />
+              </>
+              : <></>
+            }
+          </Container>
+
+          <button className='btn btn-primary' onClick={() => autorizar(folioActual)} autoFocus>Autorizar</button>
+        </ModalBody>
       </Modal>
 
       <div className='containerPDF' ref={componentRef}>

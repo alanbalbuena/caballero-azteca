@@ -23,19 +23,42 @@ function NavBar(prop) {
           <img style={{ width: '150px' }} src={logo} alt="logo"></img>
           <div className="collapse navbar-collapse" id="navbarText">
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <Link className="nav-link" to="/folios">Folios</Link>
               {
                 prop.permisos === 'superusuario'
                   ? <>
+                    <Link className="nav-link" to="/folios">Folios</Link>
+                    <Link className="nav-link" to="/reporteVentas">Reporte de Ventas</Link>
                     <Link className="nav-link" to="/adminbd">Base de datos</Link>
-                    <Link className="nav-link" to="/usuarios">Usarios</Link>
+                    <Link className="nav-link" to="/usuarios">Usuarios</Link>
                     <Link className="nav-link" to="/clientes">Clientes</Link>
                     <Link className="nav-link" to="/cobranza">Cobranza</Link>
-                    {/* <Link className="nav-link" to="/ejemplo">Ejemplo</Link> */}
-                    <Link className="nav-link" to="/reporteVentas">Reporte de Ventas</Link>
+                    <Link className="nav-link" to="/bancos">Bancos</Link>
+                    <Link className="nav-link" to="/pagos">Pagos</Link>
                   </>
                   : ''
               }
+              {
+                prop.permisos === 'administrador'
+                  ? <>
+                    <Link className="nav-link" to="/folios">Folios</Link>                    
+                  </>
+                  : ''
+              }
+              {
+                prop.permisos === 'almacen'
+                  ? <>
+                    <Link className="nav-link" to="/folios">Folios</Link>                    
+                  </>
+                  : ''
+              }
+              {
+                prop.permisos === 'cobranza'
+                  ? <>
+                    <Link className="nav-link" to="/adminbd">Base de datos</Link>
+                  </>
+                  : ''
+              }
+
             </ul>
             <button className='btn btn-danger' onClick={() => { close() }}>Cerrar sesion</button>
           </div>

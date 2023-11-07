@@ -1,19 +1,15 @@
 import React, { useState, useMemo } from 'react'
-import { onValue, push, ref } from "firebase/database"
-import { db } from "../util/firebase"
-import dataCobranzaJson from './dataCobranza.json'
+//import dataCobranzaJson from './dataCobranza.json'
 import { MaterialReactTable } from "material-react-table";
 
 import '../App.css';
+import { equalTo, onValue, orderByChild, query, ref } from 'firebase/database';
+import { db } from '../util/firebase';
 
 export default function Cobranza() {
-    const [cobranza, setCobranza] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectRuta, setselectRuta] = useState('00')
     const [selectAgente, setselectAgente] = useState('00')
     const [rutasAgente, setRutasAgente] = useState([])
-    const [cobranzaFiltrada, setCobranzaFiltrada] = useState([])
-    const [dataCobranza, setDataCobranza] = useState(dataCobranzaJson)
+    const [dataCobranza, setDataCobranza] = useState({})
     const [saldo, setSaldo] = useState(
         {
             saldo: 0,
@@ -28,9 +24,9 @@ export default function Cobranza() {
         })
 
     let jsonVendedores = [
-        { nombre: 'cesar_ramirez', rutas: [{ nombre: 'LOCAL' }, { nombre: 'CHAPALA' }] },
+        { nombre: 'Cesar Ramirez', rutas: [{ nombre: 'LOCAL' }, { nombre: 'CHAPALA' }] },
         { nombre: 'rodolfo_castellanos', rutas: [{ nombre: 'LOCAL' }] },
-        { nombre: 'horacio_tejeda', rutas: [{ nombre: 'ZAC1' }, { nombre: 'COLIMA', nombre: 'LOCAL' }] },
+        { nombre: 'Horacio Tejeda', rutas: [{ nombre: 'ZAC1' }, { nombre: 'COLIMA', nombre: 'LOCAL' }] },
         { nombre: 'horacio_guerrero', rutas: [{ nombre: 'LOCAL' }, { nombre: 'SAN MARCOS' }, { nombre: 'SAN GABRIEL' }] },
         { nombre: 'omar_rivas', rutas: [{ nombre: 'TEPIC' }, { nombre: 'VALLARTA' }, { nombre: 'TUITO' }] },
         { nombre: 'alfredo_arreola', rutas: [{ nombre: 'ZAMORA' }, { nombre: 'ZAC2' }, { nombre: 'SAN BLAS' }, { nombre: 'ROSARIO' }] },
@@ -39,13 +35,6 @@ export default function Cobranza() {
         { nombre: 'enrique_rivera', rutas: [{ nombre: 'LOCAL' }] },
         { nombre: 'carlos_bautista', rutas: [{ nombre: 'AGUASCALIENTES' }] },
     ]
-
-    /* useEffect(() => {
-        onValue(ref(db, 'Cobranza'), (snapshot) => {
-            setCobranza(snapshot.val())
-            setIsLoading(true);
-        })
-    }, []); */
 
     const handleSelectAgente = (agente) => {
         setselectAgente(agente)
@@ -71,7 +60,33 @@ export default function Cobranza() {
             porcentajeNoCobrado: 0
         }
 
-        for (let i = 0; i < dataCobranza.length; i++) {
+        let foliosRef = query(ref(db, 'Cobranza'), orderByChild('agente'), equalTo(selectAgente))
+
+        onValue(foliosRef, (snapshot) => {
+            let list = []
+            snapshot.forEach((childSnapshot) => {
+                var key = childSnapshot.key;
+                var data = childSnapshot.val();
+                list.push(data)
+                auxSaldo = {
+                    saldo: auxSaldo.saldo += data.saldo,
+                    efectivo: auxSaldo.efectivo += data.metodoPago === 'efectivo' ? data.pago : 0,
+                    transferencia: auxSaldo.transferencia += data.metodoPago === 'transferencia' ? data.pago : 0,
+                    cheque: auxSaldo.cheque += data.metodoPago === 'cheque' ? data.pago : 0,
+                    numeroCheques: data.metodoPago === 'cheque' ? auxSaldo.numeroCheques + 1 : auxSaldo.numeroCheques + 0,
+                    cobranzaEfectiva: auxSaldo.cobranzaEfectiva += data.pago,
+                    porcentajeCobrado: Math.round((auxSaldo.cobranzaEfectiva / auxSaldo.saldo) * 100),
+                    porcentajeNoCobrado: Math.round(((auxSaldo.saldo - auxSaldo.cobranzaEfectiva) / auxSaldo.saldo) * 100)
+                }  
+            })
+            
+            setDataCobranza(list)
+            setSaldo(auxSaldo)
+        }, {
+            onlyOnce: true
+        });
+
+        /* for (let i = 0; i < dataCobranza.length; i++) {
             if (nombreFormat(dataCobranza[i].agente) === selectAgente) {
                 if (selectRuta === dataCobranza[i].ruta || selectRuta === '00') {
                     auxJson.push(dataCobranza[i])
@@ -88,9 +103,9 @@ export default function Cobranza() {
                     }
                 }
             }
-        }
-        setSaldo(auxSaldo)
-        setCobranzaFiltrada(auxJson)
+        } */
+
+        
     }
 
     const nombreFormat = (str) => str.normalize("NFD").split(' ').join('_').toLowerCase();
@@ -171,7 +186,7 @@ export default function Cobranza() {
                                     <button className='btn btn-primary' onClick={handleBuscar}>Buscar</button>
                                 </div>
                             </div>
-                            <div className='row mb-3'>
+                            {/* <div className='row mb-3'>
                                 <div className="col-6">
                                     <select className="form-select" value={selectRuta} onChange={e => setselectRuta(e.target.value)}>
                                         <option value='00'>Selecciona una Ruta</option>
@@ -182,7 +197,7 @@ export default function Cobranza() {
                                         }
                                     </select>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                         <div className='col-3'>
                             <p className='mb-0'>Efectivo Cobrado: {currencyFormat(saldo.efectivo)}</p>
@@ -243,7 +258,7 @@ export default function Cobranza() {
                     <div className='card-body'>
                         <MaterialReactTable
                             columns={columns}
-                            data={cobranzaFiltrada}
+                            data={dataCobranza}
                             enableTopToolbar={false}
                             enableColumnActions={false}
                             enableSorting={false}

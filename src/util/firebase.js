@@ -6,7 +6,7 @@ import { getStorage } from "firebase/storage";
 const entornoPruduccion = true;
 const entornoPruduccionSiteGround = true;
 
-const firebaseConfigTest = {
+const firebaseConfigTest = {  
   apiKey: "AIzaSyD5ceEqOwx_vgWHhuuAhrAk8nQ6fbVYIGM",
   authDomain: "caballero-azteca-ventas.firebaseapp.com",
   databaseURL: "https://caballero-azteca-ventas-testing.firebaseio.com",
@@ -34,6 +34,5 @@ export const db = getDatabase(firebase);
 export const auth = getAuth();
 export const varStorage = getStorage();
 
-export const urlSiteGround = entornoPruduccionSiteGround ? "http://admin.caballeroazteca.com/" : "http://localhost/caballeroazteca/"
+export const urlSiteGround = entornoPruduccionSiteGround ? "https://admin.caballeroazteca.com/" : "http://localhost/caballeroazteca/"
  
-
