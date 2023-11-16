@@ -1,111 +1,108 @@
 import React, { useState, useMemo } from 'react'
-//import dataCobranzaJson from './dataCobranza.json'
 import { MaterialReactTable } from "material-react-table";
-
-import '../App.css';
-import { equalTo, onValue, orderByChild, query, ref } from 'firebase/database';
-import { db } from '../util/firebase';
+import { urlSiteGround } from '../util/firebase';
+import { Form, Tab, Tabs } from 'react-bootstrap';
+import { useEffect } from 'react';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 export default function Cobranza() {
-    const [selectAgente, setselectAgente] = useState('00')
-    const [rutasAgente, setRutasAgente] = useState([])
-    const [dataCobranza, setDataCobranza] = useState({})
-    const [saldo, setSaldo] = useState(
-        {
-            saldo: 0,
-            efectivo: 0,
-            transferencia: 0,
-            numeroCheques: 0,
-            cheque: 0,
-            cobranzaEfectiva: 0,
-            porcentajeCobrado: 0,
-            porcentajeNoCobrado: 0
+    const auxData = {
+        vencidas: [],
+        totales: {
+            efectivo: '',
+            numeroCheques: '',
+            cheque: '',
+            transferencia: '',
+            saldoPorCobrar: '',
+            nuevoSaldo: '',
+            cobranzaEfectiva: '',
+            porcentajeCobrado: '',
+            porcentajeNoCobrado: '',
 
-        })
-
-    let jsonVendedores = [
-        { nombre: 'Cesar Ramirez', rutas: [{ nombre: 'LOCAL' }, { nombre: 'CHAPALA' }] },
-        { nombre: 'rodolfo_castellanos', rutas: [{ nombre: 'LOCAL' }] },
-        { nombre: 'Horacio Tejeda', rutas: [{ nombre: 'ZAC1' }, { nombre: 'COLIMA', nombre: 'LOCAL' }] },
-        { nombre: 'horacio_guerrero', rutas: [{ nombre: 'LOCAL' }, { nombre: 'SAN MARCOS' }, { nombre: 'SAN GABRIEL' }] },
-        { nombre: 'omar_rivas', rutas: [{ nombre: 'TEPIC' }, { nombre: 'VALLARTA' }, { nombre: 'TUITO' }] },
-        { nombre: 'alfredo_arreola', rutas: [{ nombre: 'ZAMORA' }, { nombre: 'ZAC2' }, { nombre: 'SAN BLAS' }, { nombre: 'ROSARIO' }] },
-        { nombre: 'cesar_serrano', rutas: [{ nombre: 'AGUASCALIENTES' }] },
-        { nombre: 'juan_cruz', rutas: [{ nombre: 'TECO LA HUERTA' }, { nombre: 'MANZANILLO' }] },
-        { nombre: 'enrique_rivera', rutas: [{ nombre: 'LOCAL' }] },
-        { nombre: 'carlos_bautista', rutas: [{ nombre: 'AGUASCALIENTES' }] },
-    ]
-
-    const handleSelectAgente = (agente) => {
-        setselectAgente(agente)
-        for (let i = 0; i < jsonVendedores.length; i++) {
-            if (jsonVendedores[i].nombre === agente) {
-                setRutasAgente(jsonVendedores[i].rutas)
-                break
-            }
         }
     }
 
+    const [selectAgente, setselectAgente] = useState('00')
+    const [rutasAgente, setRutasAgente] = useState([])
+    const [dataCobranza, setDataCobranza] = useState(auxData)
+    const [dataCobranzaGeneral, setDataCobranzaGeneral] = useState([])
+    const [checkSeleccionado, setCheckSeleccionado] = useState('vencida')
+    const [key, setKey] = useState('hojaCobranza');
+
+    let jsonVendedores = [
+        'Cesar Ramirez',
+        'Rodolfo Castellanos',
+        'Horacio Tejeda',
+        'Horacio Guerrero',
+        'Omar Rivas',
+        'Alfredo Arreola',
+        'Cesar Serrano',
+        'Juan Cruz',
+        'Enrique Rivera',
+        'Carlos Bautista',
+    ]
+
+    useEffect(() => {
+        if (key === 'cobranzaGeneral') {
+            fetch(urlSiteGround + "cobranzaGeneral.php")
+                .then(response => response.json())
+                .then(respuesta => {
+                    if (respuesta.codigo === 200) {
+                        setDataCobranzaGeneral(respuesta.vencidas)
+                    } else {
+                        alert(respuesta.mensaje)
+                    }
+
+                }).catch(error => {
+                    alert("Ocurrio un error al consultar el endpoint cobranzaGeneral.php" + error);
+                })
+        }
+    }, [key]);
+
+
+    const handleSelectAgente = (agente) => {
+        setselectAgente(agente)
+    }
+
     const handleBuscar = () => {
-        let auxJson = []
-        let auxSaldo =
-        {
-            saldo: 0,
-            efectivo: 0,
-            transferencia: 0,
-            numeroCheques: 0,
-            cheque: 0,
-            cobranzaEfectiva: 0,
-            porcentajeCobrado: 0,
-            porcentajeNoCobrado: 0
+
+        setDataCobranza(auxData)
+        const data = {
+            nombreAgente: selectAgente,
+            statusVencida: checkSeleccionado
+        }
+        const requestOptions = {
+            method: "POST",
+            headers: { "Content-type": "application/x-www-form-urlencoded" },
+            body: JSON.stringify(data)
         }
 
-        let foliosRef = query(ref(db, 'Cobranza'), orderByChild('agente'), equalTo(selectAgente))
+        fetch(urlSiteGround + "cobranza.php", requestOptions)
+            .then(response => response.json())
+            .then(respuesta => {
+                if (respuesta.codigo === 200) {
+                    let saldoPorCobrar = 0
+                    let cobranzaEfectiva = 0
+                    respuesta.vencidas.map((d) => {
+                        saldoPorCobrar += parseFloat(d.saldo)
+                        cobranzaEfectiva += d.pago === null ? 0 : parseFloat(d.pago)
+                        d.saldo = currencyFormat(d.saldo)
+                    })
+                    respuesta.totales.saldoPorCobrar = saldoPorCobrar
+                    respuesta.totales.cobranzaEfectiva = cobranzaEfectiva
+                    respuesta.totales.porcentajeCobrado = ((cobranzaEfectiva / saldoPorCobrar) * 100).toFixed(2)
+                    respuesta.totales.nuevoSaldo = saldoPorCobrar - cobranzaEfectiva
+                    respuesta.totales.porcentajeNoCobrado = ((respuesta.totales.nuevoSaldo / saldoPorCobrar) * 100).toFixed(2)
 
-        onValue(foliosRef, (snapshot) => {
-            let list = []
-            snapshot.forEach((childSnapshot) => {
-                var key = childSnapshot.key;
-                var data = childSnapshot.val();
-                list.push(data)
-                auxSaldo = {
-                    saldo: auxSaldo.saldo += data.saldo,
-                    efectivo: auxSaldo.efectivo += data.metodoPago === 'efectivo' ? data.pago : 0,
-                    transferencia: auxSaldo.transferencia += data.metodoPago === 'transferencia' ? data.pago : 0,
-                    cheque: auxSaldo.cheque += data.metodoPago === 'cheque' ? data.pago : 0,
-                    numeroCheques: data.metodoPago === 'cheque' ? auxSaldo.numeroCheques + 1 : auxSaldo.numeroCheques + 0,
-                    cobranzaEfectiva: auxSaldo.cobranzaEfectiva += data.pago,
-                    porcentajeCobrado: Math.round((auxSaldo.cobranzaEfectiva / auxSaldo.saldo) * 100),
-                    porcentajeNoCobrado: Math.round(((auxSaldo.saldo - auxSaldo.cobranzaEfectiva) / auxSaldo.saldo) * 100)
-                }  
-            })
-            
-            setDataCobranza(list)
-            setSaldo(auxSaldo)
-        }, {
-            onlyOnce: true
-        });
-
-        /* for (let i = 0; i < dataCobranza.length; i++) {
-            if (nombreFormat(dataCobranza[i].agente) === selectAgente) {
-                if (selectRuta === dataCobranza[i].ruta || selectRuta === '00') {
-                    auxJson.push(dataCobranza[i])
-
-                    auxSaldo = {
-                        saldo: auxSaldo.saldo += dataCobranza[i].saldo,
-                        efectivo: auxSaldo.efectivo += dataCobranza[i].metodoPago === 'efectivo' ? dataCobranza[i].pago : 0,
-                        transferencia: auxSaldo.transferencia += dataCobranza[i].metodoPago === 'transferencia' ? dataCobranza[i].pago : 0,
-                        cheque: auxSaldo.cheque += dataCobranza[i].metodoPago === 'cheque' ? dataCobranza[i].pago : 0,
-                        numeroCheques: dataCobranza[i].metodoPago === 'cheque' ? auxSaldo.numeroCheques + 1 : auxSaldo.numeroCheques + 0,
-                        cobranzaEfectiva: auxSaldo.cobranzaEfectiva += dataCobranza[i].pago,
-                        porcentajeCobrado: Math.round((auxSaldo.cobranzaEfectiva / auxSaldo.saldo) * 100),
-                        porcentajeNoCobrado: Math.round(((auxSaldo.saldo - auxSaldo.cobranzaEfectiva) / auxSaldo.saldo) * 100)
-                    }
+                    setDataCobranza(respuesta)
+                } else {
+                    alert(respuesta.mensaje)
                 }
-            }
-        } */
-
-        
+            })
+            .catch(error => {
+                alert("Ocurrio un error al consultar el endpoint cobranza.php" + error);
+            })
     }
 
     const nombreFormat = (str) => str.normalize("NFD").split(' ').join('_').toLowerCase();
@@ -117,19 +114,15 @@ export default function Cobranza() {
     const columns = useMemo(
         () => [
             {
-                accessorKey: 'fechaEmision',
+                accessorKey: 'fecha_de_emision',
                 header: 'Fecha Emision',
             },
             {
-                accessorKey: 'factura',
+                accessorKey: 'numero_de_factura',
                 header: 'Factura',
             },
             {
-                accessorKey: 'notaCredito',
-                header: 'N.C.',
-            },
-            {
-                accessorKey: 'nombreCliente',
+                accessorKey: 'nombre_cliente',
                 header: 'Nombre Cliente',
             },
             {
@@ -140,143 +133,169 @@ export default function Cobranza() {
                 accessorKey: 'pago',
                 header: 'Pago',
             },
-            {
-                accessorKey: 'metodoPago',
-                header: 'Metodo',
-            },
-            {
-                accessorKey: 'banco',
-                header: 'Banco',
-            },
-            {
-                accessorKey: 'fechaPago',
-                header: 'Fecha Pago',
-            },
-            {
-                accessorKey: 'numeroCheque',
-                header: 'Numero Cheque',
-            },
-            {
-                accessorKey: 'obervaciones',
-                header: 'Obervaciones',
-            },
+
         ],
         [],
-    );
+    )
+    const columnsGeneral = useMemo(
+        () => [
+            {
+                accessorFn: (originalRow) => new Date(originalRow.fecha_de_emision), //convert to date for sorting and filtering
+                id: 'fecha_de_emision',
+                header: 'Fecha Emision',
+                filterVariant: 'date-range',
+                Cell: ({ cell }) => cell.getValue().toLocaleDateString(), // convert back to string for display
+            },
+            /* {
+                accessorKey: 'fecha_de_emision',
+                header: 'Fecha Emision',
+            }, */
+            {
+                accessorKey: 'numero_de_factura',
+                header: 'Factura',
+            },
+            {
+                accessorKey: 'nombre_cliente',
+                header: 'Nombre Cliente',
+            },
+            {
+                accessorKey: 'saldo',
+                header: 'Saldo',
+            },
+            {
+                accessorKey: 'pago',
+                header: 'Pago',
+            },
+            /* {
+                accessorKey: 'status_vencida',
+                header: 'Status',
+                filterVariant:'select',
+                filterSelectOptions: ['VENCIDA','NOVENCIDA']
+            }, */
+            {
+                accessorKey: 'nombre_del_agente',
+                header: 'Agente',
+                filterVariant:'select',
+                filterSelectOptions: jsonVendedores
+            },
+            {
+                accessorKey: 'ruta',
+                header: 'Ruta',
+            },
+            {
+                accessorKey: 'entregada',
+                header: 'Entregada',
+            },
+
+        ],
+        [],
+    )
 
     return (
         <>
             <div className='container mt-3'>
                 <div className="card shadow">
                     <div className="card-header">Cobranza</div>
-                    <div className="card-body row">
-                        <div className='col-6'>
-                            <div className='row mb-3'>
-                                <div className="col-6">
-                                    <select className="form-select" value={selectAgente} onChange={e => handleSelectAgente(e.target.value)}>
-                                        <option value='00'>Selecciona un Agente</option>
-                                        {
-                                            jsonVendedores.map((v, index) => (
-                                                <option key={index} value={v.nombre}>{v.nombre}</option>
-                                            ))
-                                        }
-                                    </select>
+                    <div className='container mt-3'>
+                        <Tabs id="controlled-tab-example" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
+                            <Tab eventKey="hojaCobranza" title="Hoja Cobranza">
+                                <div className=" row">
+                                    <div className='col-6'>
+                                        <div className='row mb-3'>
+                                            <div className="col-6">
+                                                <select className="form-select" value={selectAgente} onChange={e => handleSelectAgente(e.target.value)}>
+                                                    <option value='00'>Selecciona un Agente</option>
+                                                    {
+                                                        jsonVendedores.map((nombre, index) => (
+                                                            <option key={index} value={nombre}>{nombre}</option>
+                                                        ))
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div className="col-auto">
+                                                <button className='btn btn-primary' onClick={handleBuscar}>Buscar</button>
+                                            </div>
+                                        </div>
+                                        <div className='row'>
+                                            <Form>
+                                                <Form.Check
+                                                    type='radio'
+                                                    label='Vencidas'
+                                                    onChange={() => setCheckSeleccionado('vencida')}
+                                                    checked={checkSeleccionado === 'vencida'}
+                                                    inline
+                                                />
+
+                                                <Form.Check
+                                                    type='radio'
+                                                    label='No Vencidas'
+                                                    onChange={() => setCheckSeleccionado('no vencida')}
+                                                    checked={checkSeleccionado === 'no vencida'}
+                                                    inline
+                                                />
+                                            </Form>
+                                        </div>
+                                    </div>
+                                    <div className='col-3'>
+                                        <p className='mb-0'>Efectivo Cobrado: {dataCobranza.totales.efectivo === '' ? '' : currencyFormat(dataCobranza.totales.efectivo)}</p>
+                                        <p className='mb-0'>Numero de Cheques: {dataCobranza.totales.numeroCheques === '' ? '' : dataCobranza.totales.numeroCheques}</p>
+                                        <p className='mb-0'>Cheques: {dataCobranza.totales.cheque === '' ? '' : currencyFormat(dataCobranza.totales.cheque)}</p>
+                                        <p className='mb-0'>Transferencia: {dataCobranza.totales.transferencia === '' ? '' : currencyFormat(dataCobranza.totales.transferencia)}</p>
+                                    </div>
+                                    <div className='col-3'>
+                                        <p className='mb-0'>Cartera por Cobrar: {dataCobranza.totales.saldoPorCobrar === '' ? '' : currencyFormat(dataCobranza.totales.saldoPorCobrar)}</p>
+                                        <p className='mb-0'>Cobranza Efectiva: {dataCobranza.totales.cobranzaEfectiva === '' ? '' : currencyFormat(dataCobranza.totales.cobranzaEfectiva)} {dataCobranza.totales.porcentajeCobrado === '' ? '' : dataCobranza.totales.porcentajeCobrado}%</p>
+                                        <p className='mb-0'>Saldo: {dataCobranza.totales.nuevoSaldo === '' ? '' : currencyFormat(dataCobranza.totales.nuevoSaldo)} {dataCobranza.totales.porcentajeNoCobrado === '' ? '' : dataCobranza.totales.porcentajeNoCobrado}%</p>
+                                    </div>
+                                    <div className='card-body'>
+                                        <MaterialReactTable
+                                            columns={columns}
+                                            data={dataCobranza.vencidas}
+                                            enableTopToolbar={false}
+                                            enableColumnActions={false}
+                                            enableStickyHeader={true}
+                                            enablePagination={false}
+                                            enableSorting={false}
+                                            initialState={{
+                                                showColumnFilters: false,
+                                                density: 'compact',
+                                                columnVisibility: { key: false, status: true },
+                                            }}
+                                            defaultColumn={{
+                                                size: 30,
+                                            }}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="col-auto">
-                                    <button className='btn btn-primary' onClick={handleBuscar}>Buscar</button>
+                            </Tab>
+                            <Tab eventKey="cobranzaGeneral" title="Cobranza General">
+                                <div className='card-body'>
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <MaterialReactTable
+                                            columns={columnsGeneral}
+                                            data={dataCobranzaGeneral}
+                                            enableTopToolbar={false}
+                                            enableColumnActions={true}
+                                            enableStickyHeader={true}
+                                            enablePagination={true}
+                                            enableSorting={false}
+                                            initialState={{
+                                                showColumnFilters: true,
+                                                density: 'compact',
+                                                
+                                            }}
+                                            defaultColumn={{
+                                                size: 30,
+                                            }}
+                                        />
+                                    </LocalizationProvider>
                                 </div>
-                            </div>
-                            {/* <div className='row mb-3'>
-                                <div className="col-6">
-                                    <select className="form-select" value={selectRuta} onChange={e => setselectRuta(e.target.value)}>
-                                        <option value='00'>Selecciona una Ruta</option>
-                                        {
-                                            rutasAgente.map((r, index) => (
-                                                <option key={index} value={r.nombre}>{r.nombre}</option>
-                                            ))
-                                        }
-                                    </select>
-                                </div>
-                            </div> */}
-                        </div>
-                        <div className='col-3'>
-                            <p className='mb-0'>Efectivo Cobrado: {currencyFormat(saldo.efectivo)}</p>
-                            <p className='mb-0'>Numero de Cheques: {saldo.numeroCheques}</p>
-                            <p className='mb-0'>Cheques: {currencyFormat(saldo.cheque)}</p>
-                            <p className='mb-0'>Transferencia: {currencyFormat(saldo.transferencia)}</p>
-                        </div>
-                        <div className='col-3'>
-                            <p className='mb-0'>Cartera por Cobrar: {currencyFormat(saldo.saldo)}</p>
-                            <p className='mb-0'>Cobranza Efectiva: {currencyFormat(saldo.cobranzaEfectiva)} {saldo.porcentajeCobrado}%</p>
-                            <p className='mb-0'>Saldo: {currencyFormat(saldo.saldo)} {saldo.porcentajeNoCobrado}%</p>
-                        </div>
+                            </Tab>
+                        </Tabs>
                     </div>
-                    {/*  <div className='container'>
-                        <table className="table table-sm table-bordered">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Fecha Emision</th>
-                                    <th scope="col">Factura</th>
-                                    <th scope="col">N.C.</th>
-                                    <th scope="col">Codigo Cliente</th>
-                                    <th scope="col">Nombre Cliente</th>
-                                    <th scope="col">$ Factura</th>
-                                    <th scope="col">$ N.C.</th>
-                                    <th scope="col">$ Por Pagar</th>
-                                    <th scope="col">Abono</th>
-                                    <th scope="col">Saldo</th>
-                                    <th scope="col">Efectivo</th>
-                                    <th scope="col">Otros</th>
-                                    <th scope="col">Obervaciones</th>
-                                    <th scope="col">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {
-                                    cobranzaFiltrada.map((c, index) => (
-                                        <tr key={index}>
-                                            <td>{c.fechaEmision}</td>
-                                            <td>{c.factura}</td>
-                                            <td>{c.notaCredito}</td>
-                                            <td>{c.codigoCliente}</td>
-                                            <td>{c.nombreCliente}</td>
-                                            <td>{currencyFormat(c.importeFactura)}</td>
-                                            <td>{currencyFormat(c.importeNotaCredito)}</td>
-                                            <td>{currencyFormat(c.importePorPagar)}</td>
-                                            <td>{currencyFormat(c.abono)}</td>
-                                            <td>{currencyFormat(c.saldo)}</td>
-                                            <td>{currencyFormat(c.efectivo)}</td>
-                                            <td>{currencyFormat(c.otros)}</td>
-                                            <td>{c.observaciones}</td>
-                                            <td>{c.vencidas ? 'Vencida' : ''}</td>
-                                        </tr>
-                                    ))
-                                }
-                            </tbody>
-                        </table>
-                    </div> */}
-                    <div className='card-body'>
-                        <MaterialReactTable
-                            columns={columns}
-                            data={dataCobranza}
-                            enableTopToolbar={false}
-                            enableColumnActions={false}
-                            enableSorting={false}
-                            initialState={{
-                                showColumnFilters: false,
-                                density: 'compact',
-                                columnVisibility: { key: false, status: true },
-                                /* sorting: [
-                                { id: 'key', desc: true },
-                              ],  */
-                            }}
-                            defaultColumn={{
-                                size: 30, //make columns wider by default
-                            }}
-                        />
-                    </div>
+
                 </div>
-            </div>
+            </div >
         </>
     )
 }

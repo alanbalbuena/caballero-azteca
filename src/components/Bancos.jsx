@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { urlSiteGround } from '../util/firebase'
-import MaterialReactTable from 'material-react-table'
+import {MaterialReactTable, useMaterialReactTable} from 'material-react-table';
 
 export default function Bancos() {
     const [data, setData] = useState([])
@@ -63,28 +63,32 @@ export default function Bancos() {
         return num === 0 ? '' : '$' + parseFloat(num).toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
     }
 
+    const table = useMaterialReactTable({
+        columns: columns,
+        data: data,
+        enableTopToolbar: false,
+        enableColumnActions: false,
+        enableSorting: false,
+        initialState: {
+            showColumnFilters: false,
+            density: 'compact',
+            columnVisibility: { key: false, status: true },
+            sorting: [
+                { id: 'key', desc: true },
+            ],
+        },
+        defaultColumn: {
+            size: 30, //make columns wider by default
+        }
+    })
+
     return (
         <div className='container ' style={{ marginTop: '20px' }}>
             <div className="card shadow">
                 <div className="card-header">Bancos</div>
                 <div className='card-body'>
                     <MaterialReactTable
-                        columns={columns}
-                        data={data}
-                        enableTopToolbar={false}
-                        enableColumnActions={false}
-                        enableSorting={false}
-                        initialState={{
-                            showColumnFilters: false,
-                            density: 'compact',
-                            columnVisibility: { key: false, status: true },
-                            /* sorting: [
-                            { id: 'key', desc: true },
-                          ],  */
-                        }}
-                        defaultColumn={{
-                            size: 30, //make columns wider by default
-                        }}
+                        table={table}
                     />
                 </div>
             </div>

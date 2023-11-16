@@ -31,7 +31,8 @@ export default function BDAdmin(props) {
     fetch(urlSiteGround + 'ultimoFolio.php')
       .then((response) => response.json())
       .then((json) => {
-        setUltimoFolio(json)
+        json != undefined ? setUltimoFolio(json) : setUltimoFolio({folio:'La tabla esta vacia'})
+        
       })
 
     fetch(urlSiteGround + 'tablasActualizadas.php')
@@ -65,7 +66,7 @@ export default function BDAdmin(props) {
 
   const handleSubmit = async (tipo) => {
 
-    if (file === null) return null
+    if (file === undefined) return alert("Falta ingresar un archivo")
     let objRef = ref(db, tipo)
 
     var json = ''
@@ -108,30 +109,35 @@ export default function BDAdmin(props) {
   }
 
   const handleVentas = async () => {
+    if (file === undefined) return alert("Falta ingresar un archivo")
     setCargandoProductosNewBD(true)
     let data = await getDataExcel()
 
+    if (
+      data[0]['folio'] === undefined ||
+      data[0]['codigo'] === undefined ||
+      data[0]['cantidad'] === undefined ||
+      data[0]['marca'] === undefined ||
+      data[0]['articulo'] === undefined ||
+      data[0]['precio'] === undefined ||
+      data[0]['totalSinIva'] === undefined ||
+      data[0]['documento'] === undefined ||
+      data[0]['fecha'] === undefined ||
+      data[0]['agente'] === undefined ||
+      data[0]['cliente'] === undefined
+    ) {
+      setCargandoProductosNewBD(false)
+      return alert("Falta alguna columna o alguno de los encabezados esta mal escrito")
+    }
     data.forEach((row) => {
-      const auxFecha = new Date((row['fecha'] - 25568) * 86400 * 1000)
-      var dia = auxFecha.getDate()
-      var mes = auxFecha.getMonth() + 1
-      const ano = auxFecha.getFullYear()
-
-      dia = dia < 10 ? ("0" + dia) : dia
-      mes = mes < 10 ? ("0" + mes) : mes
-
-      row['fecha'] = ano + "-" + dia + "-" + mes;
-
-      //row['fecha'] = typeof (row['fecha']) === "number" ? moment(new Date((row['fecha'] - 25568) * 86400 * 1000)).format('YYYY-MM-DD') : row['fecha'].replaceAll("/", "-").split("-").reverse().join("-")
+      row['fecha'] = typeof (row['fecha']) === "number" ? moment(new Date((row['fecha'] - 25568) * 86400 * 1000)).format('YYYY-MM-DD') : row['fecha'].replaceAll("/", "-").split("-").reverse().join("-")
     })
     enviarBaseDatos('actualizarVentas.php', data)
-
-    //console.log(data);
   }
 
   const handleBancos = async () => {
 
-    if (file === null) return null
+    if (file === undefined) return alert("Falta ingresar un archivo")
 
     let dataExcel = await getDataExcel()
     let list = []
@@ -152,7 +158,7 @@ export default function BDAdmin(props) {
 
   const handleFacturas = async () => {
 
-    if (file === null) return null
+    if (file === undefined) return alert("Falta ingresar un archivo")
     setCargandoFacturas(true)
     let dataExcel = await getDataExcel()
     let list = []
@@ -191,7 +197,7 @@ export default function BDAdmin(props) {
 
   const handleRemisiones = async () => {
 
-    if (file === null) return null
+    if (file === undefined) return alert("Falta ingresar un archivo")
     setCargandoRemisiones(true)
 
     let dataExcel = await getDataExcel()
@@ -230,18 +236,19 @@ export default function BDAdmin(props) {
 
   const enviarBaseDatos = (url, data) => {
     const requestOptions = {
-      mode: 'no-cors',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      //mode: "no-cors",
+      method: "POST",
+      headers: { "Content-type": "application/x-www-form-urlencoded" },
       body: JSON.stringify(data)
-    };
+  }
 
     fetch(urlSiteGround + url, requestOptions)
-      .then(response => {
-        if (response.status === 200 || response.status === 0) {
-          alert("se inserto correctamente")
-        } else if (response.status === 400) {
-          alert("hubo un error al intentar insertar en la base de datos")
+      .then(response => response.json())
+      .then(respuesta => {
+        if (respuesta.codigo === 200) {
+          alert(respuesta.mensaje)
+        } else {
+          alert(respuesta.mensaje)
         }
       }).catch(error => {
         console.log(error)
@@ -287,9 +294,9 @@ export default function BDAdmin(props) {
     )
   }
 
-  function UltimaActualizacion({data}) {
+  function UltimaActualizacion({ data }) {
     return (
-      <div className='col-2' style={{color:'darkgray'}}>
+      <div className='col-2' style={{ color: 'darkgray' }}>
         <p>{data}</p>
       </div>
     )
