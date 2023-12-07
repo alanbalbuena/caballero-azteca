@@ -32,7 +32,7 @@ function NavBar(prop) {
                     <Link className="nav-link" to="/usuarios">Usuarios</Link>
                     <Link className="nav-link" to="/clientes">Clientes</Link>
                     <Link className="nav-link" to="/cobranza">Cobranza</Link>
-                    <Link className="nav-link" to="/bancos">Bancos</Link>
+                    {/* <Link className="nav-link" to="/bancos">Bancos</Link> */}
                     <Link className="nav-link" to="/pagos">Pagos</Link>
                   </>
                   : ''

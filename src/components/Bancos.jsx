@@ -82,9 +82,14 @@ export default function Bancos() {
         }
     })
 
+    const [contador, setContador] = useState(0)
+    
+console.log("entro a todo")
     return (
         <div className='container ' style={{ marginTop: '20px' }}>
             <div className="card shadow">
+                <button onClick={()=> setContador(contador+1)}>miboton</button>
+                {contador}
                 <div className="card-header">Bancos</div>
                 <div className='card-body'>
                     <MaterialReactTable
