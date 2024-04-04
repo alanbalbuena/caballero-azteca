@@ -8,7 +8,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Box } from '@mui/material';
 import { ExportToCsv } from 'export-to-csv';
 
-export default function Cobranza() {
+export default function Cobranza(prop) {
     const auxData = {
         vencidas: [],
         totales: {
@@ -39,6 +39,8 @@ export default function Cobranza() {
     const [numeroCheque, setNumeroCheque] = useState('')
     const [montoaPagar, setMontoaPagar] = useState(0)
     const refInputPagoFactura = useRef([])
+    const [nombreUsuario] = useState(prop.nombre)
+    const [userPermiso] = useState(prop.permisos)
 
     let jsonVendedores = [
         'Cesar Ramirez',
@@ -60,7 +62,8 @@ export default function Cobranza() {
     }, [key]);
 
     const obtenerCobranzaGeneral = () => {
-        fetch(urlSiteGround + "cobranzaGeneral.php")
+        
+        fetch(urlSiteGround + "cobranzaGeneral.php?permiso="+userPermiso+"&nombre="+ "'" + quitarAcentos(nombreUsuario) + "'")
             .then(response => response.json())
             .then(respuesta => {
                 if (respuesta.codigo === 200) {
@@ -73,6 +76,10 @@ export default function Cobranza() {
                 alert("Ocurrio un error al consultar el endpoint cobranzaGeneral.php" + error);
             })
     }
+
+    const quitarAcentos = (str) => {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      } 
 
     const handleSelectAgente = (agente) => {
         setselectAgente(agente)
@@ -314,9 +321,10 @@ export default function Cobranza() {
                                             renderTopToolbarCustomActions={({ table }) => (
                                                 <Box sx={{ display: 'flex', gap: '1rem', p: '0.5rem', flexWrap: 'wrap' }}>
                                                     <Button
-                                                        disabled={
+                                                        /*disabled={
                                                             !table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
-                                                        }
+                                                        }*/
+                                                        disabled
                                                         //only export selected rows
                                                         onClick={() => MostrarModal(table.getSelectedRowModel().rows)}
 

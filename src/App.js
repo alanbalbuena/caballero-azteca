@@ -43,7 +43,7 @@ export default function App() {
           <Route path="/adminbd" element={<BDAdmin permisos={permisos}/>} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/clientes" element={<Clientes />} />
-          <Route path="/cobranza" element={<Cobranza />} />
+          <Route path="/cobranza" element={<Cobranza nombre={nombreUsuario} permisos={permisos} />} />
           <Route path="/ejemplo" element={<Ejemplo />} />
           <Route path="/reporteVentas" element={<ReporteVentas />} />
           <Route path="/login" element={<Login />} />

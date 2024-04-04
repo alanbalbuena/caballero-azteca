@@ -58,6 +58,14 @@ function NavBar(prop) {
                   </>
                   : ''
               }
+              {
+                prop.permisos === 'vendedor'
+                  ? <>
+                    <Link className="nav-link" to="/folios">Folios</Link> 
+                    <Link className="nav-link" to="/cobranza">Cobranza</Link>
+                  </>
+                  : ''
+              }
 
             </ul>
             <button className='btn btn-danger' onClick={() => { close() }}>Cerrar sesion</button>
